@@ -23,18 +23,6 @@
 
 int accept_req(int sockfd);
 
-void sigchld_handler(int s) {
-    (void)s; // quiet unused variable warning
-
-    // waitpid() might overwrite errno, so we save and restore it:
-    int saved_errno = errno;
-
-    while (waitpid(-1, NULL, WNOHANG) > 0)
-        ;
-
-    errno = saved_errno;
-}
-
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa) {
     if (sa->sa_family == AF_INET) {
@@ -99,14 +87,6 @@ int init(void) {
         exit(1);
     }
 
-    sa.sa_handler = sigchld_handler; // reap all dead processes
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = SA_RESTART;
-    if (sigaction(SIGCHLD, &sa, NULL) == -1) {
-        perror("sigaction");
-        exit(1);
-    }
-
     printf("server: waiting for connections...\n");
 
 	accept_req(sockfd);
@@ -115,7 +95,6 @@ int init(void) {
 }
 
 int accept_req(int sockfd){
-
 	int err;
 	size_t f_size = 3000;
 	char * response_str = read_file("res/more-references.html", &err, &f_size);
@@ -145,16 +124,9 @@ int accept_req(int sockfd){
                   get_in_addr((struct sockaddr *)&client_addr), s, sizeof s);
         printf("server: got connection from %s\n", s);
 
-        char req[1024];
-
-        if (!fork()) {     // this is the child process
-            close(sockfd); // child doesn't need the listener
-            if (send(new_fd, http_header, strlen(http_header), 0) == -1)
-                perror("send");
-            close(new_fd);
-            exit(0);
-        }
-        close(new_fd); // parent doesn't need this
+        if (send(new_fd, http_header, strlen(http_header), 0) == -1)
+            perror("send");
+        close(new_fd);
     }
 
 }
