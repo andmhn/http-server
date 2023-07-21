@@ -125,7 +125,7 @@ int accept_req(int sockfd){
 	}
 
 	char http_header[4000] = "HTTP/1.1 200 OK\r\n\n";
-	strcat(http_header, response_str);
+	strncat(http_header, response_str, f_size);
 
 
 	struct sockaddr_storage client_addr;
