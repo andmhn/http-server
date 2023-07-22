@@ -16,6 +16,7 @@
 #include <unistd.h>
 
 #include "utils.h"
+#include "parser.h"
 
 #define PORT "3490" // the port users will be connecting to
 
@@ -110,10 +111,12 @@ int accept_req(int sockfd) {
         // recieving
         recv(new_fd, request_str, 1024, 0);
 
-        printf("%s\n\n", request_str);
-        fflush(stdout);
 
         // TODO: Parse String
+		char* r = parse_get_req(request_str);
+        printf("%s\n\n", r);
+        fflush(stdout);
+		
         // TODO: send request file
 
         // sending
