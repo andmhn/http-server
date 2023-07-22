@@ -15,14 +15,19 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "utils.h"
 #include "parser.h"
+#include "utils.h"
 
 #define PORT "3490" // the port users will be connecting to
 
 #define BACKLOG 10 // how many pending connections queue will hold
 
+extern char SERVING_DIR[];
+
+#define SIZ 50000
+
 int accept_req(int sockfd);
+void process_req(char *request_str, int client_fd);
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa) {
@@ -87,41 +92,79 @@ int init(void) {
 int accept_req(int sockfd) {
     struct sockaddr_storage client_addr;
     socklen_t sin_size;
-    int new_fd;
+    int client_fd;
     char s[INET6_ADDRSTRLEN];
 
-    char header_ok[1024] =
-        "HTTP/1.0 200 OK\r\n\n <!DOCTYPE html><body><p> hi</p></body>";
-
     while (1) { // main accept() loop
-        char request_str[1024];
+        char request_str[BUFSIZ];
         printf("server: waiting for connections...\n");
         sin_size = sizeof client_addr;
-        new_fd = accept(sockfd, (struct sockaddr *)&client_addr, &sin_size);
-        if (new_fd == -1) {
+        client_fd = accept(sockfd, (struct sockaddr *)&client_addr, &sin_size);
+        if (client_fd == -1) {
             perror("accept");
             continue;
         }
 
-		// getting ip address of client
+        // getting ip address of client
         inet_ntop(client_addr.ss_family,
                   get_in_addr((struct sockaddr *)&client_addr), s, sizeof s);
         printf("server: got connection from %s\n", s);
 
         // recieving
-        recv(new_fd, request_str, 1024, 0);
+        recv(client_fd, request_str, BUFSIZ, 0);
 
+		process_req(request_str, client_fd);
 
-        // TODO: Parse String
-		char* r = parse_get_req(request_str);
-        printf("%s\n\n", r);
-        fflush(stdout);
-		
-        // TODO: send request file
-
-        // sending
-        if (send(new_fd, header_ok, strlen(header_ok), 0) == -1)
-            perror("send");
-        close(new_fd);
+        close(client_fd);
     }
+}
+
+
+// processes http requests and responds them
+void process_req(char *request_str, int client_fd) {
+    char header_ok[SIZ + 500] = "HTTP/1.0 200 OK\r\n\n";
+
+    // Parse String
+    char *get_req_str = parse_get_req(request_str);
+    printf("%s\n", get_req_str);
+
+	char * filename = get_file_str(get_req_str);	
+
+	char * file_content;
+	int err; size_t size = SIZ;
+	char file_to_read[BUFSIZ];
+	memset(file_to_read, 0, BUFSIZ);
+
+	strncpy(file_to_read, SERVING_DIR, 3);
+	strncat(file_to_read, filename, strlen(filename));
+
+	// TODO differentiate b/w html and binary
+
+	if(!strcmp(filename, "/")){
+		strncat(file_to_read, "index.html", 10);
+		file_content = read_file(file_to_read , &err, &size);
+	}
+	else {
+		file_content = read_file(file_to_read, &err, &size);
+	}
+
+	if(err != FILE_OK){
+	    printf("FILE NOT EXIST %s\n", file_to_read);
+    	if (send(client_fd, header_ok, strlen(header_ok), 0) == -1)
+        	perror("send");
+		printf("\n\n");
+	    return;
+	}
+
+	strncat(header_ok, file_content, size);
+
+    if (send(client_fd, header_ok, strlen(header_ok), 0) == -1)
+        perror("send");
+
+	free(filename);
+	free(file_content);
+	free(get_req_str);
+
+	printf("\n\n");
+	fflush(stdout);
 }

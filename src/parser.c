@@ -1,7 +1,23 @@
 #include "parser.h"
 #include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
+
+char * get_file_str(char * req_str){
+	char *req_file = (char*)malloc(BUFSIZ * sizeof(char));
+
+	// fix garbage returns
+	memset(req_file, 0,BUFSIZ);
+
+	int i = 0, pos = 4;
+	while(req_str[pos] != ' '){
+		req_file[i] = req_str[pos];
+		pos++;
+		i++;
+	}
+	req_file[pos] = '\0';
+	return req_file;	
+}
 
 // checks if curr_line is get request
 int is_get_req(char * curr_line){
@@ -14,7 +30,7 @@ int is_get_req(char * curr_line){
 	return strcmp(get, "GET");
 }
 
-// returns get string
+// returns get request string
 char* parse_get_req(char * req) {
 	int len = strlen(req);
 	char *curr_line = (char*)malloc(500 * sizeof(char));
@@ -36,4 +52,3 @@ char* parse_get_req(char * req) {
 
 	return curr_line;
 }
-
