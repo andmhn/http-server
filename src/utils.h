@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
 
 #define FILE_OK 0
 #define FILE_NOT_EXIST 1
@@ -8,3 +10,4 @@
 
 char * read_file(const char * f_name, int * err, size_t * f_size);
 
+bool is_binary(const char * f_name);

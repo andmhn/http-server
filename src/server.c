@@ -15,6 +15,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <stdbool.h>
+
 #include "parser.h"
 #include "utils.h"
 
@@ -119,52 +121,89 @@ int accept_req(int sockfd) {
     }
 }
 
-
-// processes http requests and responds them
-void process_req(char *request_str, int client_fd) {
-    char header_ok[SIZ + 500] = "HTTP/1.0 200 OK\r\n\n";
-
-    // Parse String
-    char *get_req_str = parse_get_req(request_str);
-    printf("%s\n", get_req_str);
-
-	char * filename = get_file_str(get_req_str);	
-
-	char * file_content;
+// sets status to  0 in succesful read
+// sets status to -1 if file dooesn't exist
+// sets status to -2 if it is directory
+void* get_file_content(char * filename , size_t *buf_len, int *status) {
 	int err; size_t size = SIZ;
 	char file_to_read[BUFSIZ];
 	memset(file_to_read, 0, BUFSIZ);
 
+	void* file_buffer;
+
+	// making the path
 	strncpy(file_to_read, SERVING_DIR, 3);
 	strncat(file_to_read, filename, strlen(filename));
 
-	// TODO differentiate b/w html and binary
+	// sending binary file
+	if(is_binary(file_to_read)){
+		FILE *fp = fopen(file_to_read, "rb");
+		int nr;
+		void *nums = malloc(50000 * sizeof(int)); // Maybe better solution
+		nr = fread(nums, sizeof(int), 50000, fp);
+		fclose(fp);
+		
+		*buf_len = nr;
+		*status = 0;
 
+		printf("Yay binary");
+		return nums;	
+	}
 	if(!strcmp(filename, "/")){
 		strncat(file_to_read, "index.html", 10);
-		file_content = read_file(file_to_read , &err, &size);
+		file_buffer = read_file(file_to_read , &err, &size);
+		*buf_len = size;
+		*status = 0;
 	}
 	else {
-		file_content = read_file(file_to_read, &err, &size);
+		file_buffer = read_file(file_to_read, &err, &size);
+		*buf_len = size;
+		*status = 0;
 	}
 
-	if(err != FILE_OK){
-	    printf("FILE NOT EXIST %s\n", file_to_read);
-    	if (send(client_fd, header_ok, strlen(header_ok), 0) == -1)
+	if(err == FILE_NOT_EXIST) {
+	    fprintf(stderr, "FILE NOT EXIST %s\n", filename);
+		*status = -1;
+	}
+
+	// TODO check if path is directory
+	return file_buffer;	
+}
+
+// processes http requests and responds them
+void process_req(char *request_str, int client_fd) {
+    char header_ok[] = "HTTP/1.0 200 OK\r\n\n";
+    char header_404[] = "HTTP/1.0 404 Not Found\r\n\n";
+
+    // Parse String
+    char *get_req_str = parse_get_req(request_str);
+    printf("%s\n", get_req_str);
+	
+	// necessary for getting file content
+	char * filename = get_file_str(get_req_str);
+	int file_status = 0;
+	size_t buffer_len;
+	void * file_buffer = get_file_content(filename, &buffer_len, &file_status);
+	
+	if(file_status == -1){
+    	if (send(client_fd, header_404, strlen(header_404), 0) == -1)
         	perror("send");
-		printf("\n\n");
+		printf("\n");
 	    return;
 	}
-
-	strncat(header_ok, file_content, size);
-
+	
+	// the final responses to send
     if (send(client_fd, header_ok, strlen(header_ok), 0) == -1)
         perror("send");
 
+    if (send(client_fd, file_buffer, buffer_len, 0) == -1)
+        perror("send");
+
+	// cleanup
 	free(filename);
-	free(file_content);
+	free(file_buffer);
 	free(get_req_str);
 
-	printf("\n\n");
+	printf("\n");
 	fflush(stdout);
 }
