@@ -1,12 +1,9 @@
-/*
-** server.c -- a stream socket server demo
-*/
-
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,21 +12,30 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include <stdbool.h>
-
 #include "parser.h"
 #include "utils.h"
 
-#define PORT "3490" // the port users will be connecting to
-
-#define BACKLOG 10 // how many pending connections queue will hold
+#define PORT "3490"       // the port users will be connecting to
+#define BACKLOG 10        // how many pending connections queue will hold
+#define BUFFERSIZE 0x8000 // 32k buffer (adapt at will)
 
 extern char SERVING_DIR[];
+char header_ok[] = "HTTP/1.0 200 OK\r\n\n";
+char header_404[] = "HTTP/1.0 404 Not Found\r\n\n";
 
-#define SIZ 50000
-
+// Function declarations
+int init(void);
+void *get_in_addr(struct sockaddr *sa);
 int accept_req(int sockfd);
 void process_req(char *request_str, int client_fd);
+int verify_filepath(const char *file_path);
+char *get_filepath(char *get_str);
+int handle_text_file(int sock_fd, char *filename);
+void send_file(int sock_fd, const char *f_name);
+
+/*
+ * Function Implementations
+ * */
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa) {
@@ -115,95 +121,104 @@ int accept_req(int sockfd) {
         // recieving
         recv(client_fd, request_str, BUFSIZ, 0);
 
-		process_req(request_str, client_fd);
+        process_req(request_str, client_fd);
 
         close(client_fd);
     }
 }
 
-// sets status to  0 in succesful read
-// sets status to -1 if file dooesn't exist
-// sets status to -2 if it is directory
-void* get_file_content(char * filename , size_t *buf_len, int *status) {
-	int err; size_t size = SIZ;
-	char file_to_read[BUFSIZ];
-	memset(file_to_read, 0, BUFSIZ);
+// read and send content to sock_fd
+void send_file(int sock_fd, const char *f_name) {
+    FILE *fp1 = fopen(f_name, "rb");
 
-	void* file_buffer;
+    if (fp1 == NULL)
+        exit(1);
 
-	// making the path
-	strncpy(file_to_read, SERVING_DIR, 3);
-	strncat(file_to_read, filename, strlen(filename));
+    for (;;) // loop for ever
+    {
+        char buffer[BUFFERSIZE];
+        size_t bytesread = fread(buffer, sizeof(char), sizeof buffer, fp1);
 
-	// sending binary file
-	if(is_binary(file_to_read)){
-		FILE *fp = fopen(file_to_read, "rb");
-		int nr;
-		void *nums = malloc(50000 * sizeof(int)); // Maybe better solution
-		nr = fread(nums, sizeof(int), 50000, fp);
-		fclose(fp);
-		
-		*buf_len = nr;
-		*status = 0;
+        // bytesread contains the number of bytes actually read
+        if (bytesread == 0) {
+            // no bytes read => end of file
+            break;
+        }
 
-		printf("Yay binary");
-		return nums;	
-	}
-	if(!strcmp(filename, "/")){
-		strncat(file_to_read, "index.html", 10);
-		file_buffer = read_file(file_to_read , &err, &size);
-		*buf_len = size;
-		*status = 0;
-	}
-	else {
-		file_buffer = read_file(file_to_read, &err, &size);
-		*buf_len = size;
-		*status = 0;
-	}
+        // send here
+        if (send(sock_fd, buffer, BUFFERSIZE, 0) == -1)
+            perror("send");
+    }
 
-	if(err == FILE_NOT_EXIST) {
-	    fprintf(stderr, "FILE NOT EXIST %s\n", filename);
-		*status = -1;
-	}
+    fclose(fp1);
+}
 
-	// TODO check if path is directory
-	return file_buffer;	
+// thinking on file path
+int handle_text_file(int sock_fd, char *filename) {
+    if (ends_with(filename, "/")) {
+        strncat(filename, "index.html", 10);
+    }
+    send_file(sock_fd, filename);
+
+    // TODO check if path is directory
+    return 0;
+}
+
+char *get_filepath(char *get_str) {
+    char *filename = get_file_str(get_str);
+    char *file_to_read = malloc(BUFSIZ * sizeof(char));
+    memset(file_to_read, 0, BUFSIZ);
+    strncpy(file_to_read, SERVING_DIR, 3); // making the path
+    strncat(file_to_read, filename, strlen(filename));
+
+    free(filename);
+    return file_to_read;
+}
+
+int verify_filepath(const char *file_path) {
+    FILE *temp = fopen(file_path, "rb");
+    if (temp == NULL) {
+        return -1;
+    }
+    fclose(temp);
+    return 0;
 }
 
 // processes http requests and responds them
 void process_req(char *request_str, int client_fd) {
-    char header_ok[] = "HTTP/1.0 200 OK\r\n\n";
-    char header_404[] = "HTTP/1.0 404 Not Found\r\n\n";
-
     // Parse String
     char *get_req_str = parse_get_req(request_str);
     printf("%s\n", get_req_str);
-	
-	// necessary for getting file content
-	char * filename = get_file_str(get_req_str);
-	int file_status = 0;
-	size_t buffer_len;
-	void * file_buffer = get_file_content(filename, &buffer_len, &file_status);
-	
-	if(file_status == -1){
-    	if (send(client_fd, header_404, strlen(header_404), 0) == -1)
-        	perror("send");
-		printf("\n");
-	    return;
-	}
-	
-	// the final responses to send
+
+    char *filepath = get_filepath(get_req_str);
+
+    // check if file exist
+    if (verify_filepath(filepath)) {
+        if (send(client_fd, header_404, strlen(header_404), 0) == -1)
+            perror("send");
+        goto exit;
+    }
+
+    // handle binary file first
+    if (is_binary(filepath)) {
+        if (send(client_fd, header_ok, strlen(header_ok), 0) == -1)
+            perror("send");
+        send_file(client_fd, filepath);
+        goto exit;
+    }
+
+    // sending 200 OK first
     if (send(client_fd, header_ok, strlen(header_ok), 0) == -1)
         perror("send");
 
-    if (send(client_fd, file_buffer, buffer_len, 0) == -1)
-        perror("send");
+    // check file loading error
+    if (handle_text_file(client_fd, filepath) == -1) {
+        goto exit;
+    }
 
-	// cleanup
-	free(filename);
-	free(file_buffer);
-	free(get_req_str);
+exit:
+    free(get_req_str);
 
-	printf("\n");
-	fflush(stdout);
+    printf("\n");
+    fflush(stdout);
 }
