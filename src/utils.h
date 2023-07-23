@@ -11,3 +11,4 @@
 char * read_file(const char * f_name, int * err, size_t * f_size);
 
 bool is_binary(const char * f_name);
+bool ends_with(const char *str, const char *end_str);

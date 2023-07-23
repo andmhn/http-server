@@ -1,9 +1,32 @@
 #include "utils.h"
 
-char * read_file(const char * f_name, int * err, size_t * f_size) {
-    char * buffer;
+bool ends_with(const char *str, const char *end_str) {
+    size_t end_len = strlen(end_str);
+    size_t pos = strlen(str) - end_len;
+
+    for (int i = 0; i <= end_len; i++, pos++) {
+        if (str[pos] != end_str[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool is_binary(const char *f_name) {
+    char *file_types[] = {"gif", "png", "jpg", "jpeg", "mp4", "webm", "ico"};
+
+    for (int i = 0; i < 7; i++) {
+        if (ends_with(f_name, file_types[i])) {
+            return true;
+        }
+    }
+    return false;
+}
+
+char *read_file(const char *f_name, int *err, size_t *f_size) {
+    char *buffer;
     size_t length;
-    FILE * f = fopen(f_name, "rb");
+    FILE *f = fopen(f_name, "rb");
     size_t read_length;
 
     if (f) {
@@ -15,6 +38,7 @@ char * read_file(const char * f_name, int * err, size_t * f_size) {
         if (length > 1073741824) {
             *err = FILE_TOO_LARGE;
 
+            fclose(f);
             return NULL;
         }
 
@@ -24,10 +48,11 @@ char * read_file(const char * f_name, int * err, size_t * f_size) {
             read_length = fread(buffer, 1, length, f);
 
             if (length != read_length) {
-                 free(buffer);
-                 *err = FILE_READ_ERROR;
+                free(buffer);
+                *err = FILE_READ_ERROR;
 
-                 return NULL;
+                fclose(f);
+                return NULL;
             }
         }
 
@@ -36,8 +61,7 @@ char * read_file(const char * f_name, int * err, size_t * f_size) {
         *err = FILE_OK;
         buffer[length] = '\0';
         *f_size = length;
-    }
-    else {
+    } else {
         *err = FILE_NOT_EXIST;
 
         return NULL;
@@ -45,4 +69,3 @@ char * read_file(const char * f_name, int * err, size_t * f_size) {
 
     return buffer;
 }
-
