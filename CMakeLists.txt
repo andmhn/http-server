@@ -10,4 +10,3 @@ set(BIN_NAME http-server)
 file(GLOB SRC src/*.c)
 
 add_executable(${BIN_NAME} ${SRC})
-file(COPY res DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
