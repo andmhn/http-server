@@ -1,3 +1,4 @@
+#include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -9,6 +10,6 @@
 #define FILE_READ_ERROR 3
 
 char * read_file(const char * f_name, int * err, size_t * f_size);
-
+bool is_dir(const char *path);
 bool is_binary(const char * f_name);
 bool ends_with(const char *str, const char *end_str);

@@ -1,6 +1,0 @@
-#!/bin/bash
-
-pwd_old=$PWD
-
-cmake . -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -B build && cd build && make && cd bin && ./http-server "$1"
-cd "$pwd_old" && cp build/compile_commands.json .

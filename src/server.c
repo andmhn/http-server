@@ -158,7 +158,7 @@ void send_file(int sock_fd, const char *f_name) {
 // thinking on file path
 int handle_text_file(int sock_fd, char *filename) {
     if (ends_with(filename, "/")) {
-        strncat(filename, "index.html", 10);
+        strncat(filename, "index.html", 11);
     }
     send_file(sock_fd, filename);
 
@@ -168,7 +168,7 @@ int handle_text_file(int sock_fd, char *filename) {
 
 char *get_filepath(char *get_str) {
     char *filename = get_file_str(get_str);
-    char *file_to_read = malloc(BUFSIZ * sizeof(char));
+    char *file_to_read = (char *) malloc(BUFSIZ * sizeof(char));
     memset(file_to_read, 0, BUFSIZ);
     strncpy(file_to_read, SERVING_DIR, strlen(SERVING_DIR)); // making the path
     strncat(file_to_read, filename, strlen(filename));
