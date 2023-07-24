@@ -1,10 +1,20 @@
 #include "utils.h"
 
+bool is_dir(const char *path) {
+    DIR *dir = opendir(path);
+    if (dir == NULL) {
+        return false;
+    }
+
+    closedir(dir);
+    return true;
+}
+
 bool ends_with(const char *str, const char *end_str) {
     size_t end_len = strlen(end_str);
     size_t pos = strlen(str) - end_len;
 
-    for (int i = 0; i <= end_len; i++, pos++) {
+    for (size_t i = 0; i <= end_len; i++, pos++) {
         if (str[pos] != end_str[i]) {
             return false;
         }
