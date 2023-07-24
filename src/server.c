@@ -131,8 +131,10 @@ int accept_req(int sockfd) {
 void send_file(int sock_fd, const char *f_name) {
     FILE *fp1 = fopen(f_name, "rb");
 
-    if (fp1 == NULL)
+    if (fp1 == NULL) {
+        perror(f_name);
         exit(1);
+    }
 
     for (;;) // loop for ever
     {
@@ -168,7 +170,7 @@ char *get_filepath(char *get_str) {
     char *filename = get_file_str(get_str);
     char *file_to_read = malloc(BUFSIZ * sizeof(char));
     memset(file_to_read, 0, BUFSIZ);
-    strncpy(file_to_read, SERVING_DIR, 3); // making the path
+    strncpy(file_to_read, SERVING_DIR, strlen(SERVING_DIR)); // making the path
     strncat(file_to_read, filename, strlen(filename));
 
     free(filename);
