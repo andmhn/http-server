@@ -1,7 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 enum request { GET, HEAD, POST };
 
 // contains the request and it's content

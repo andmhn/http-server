@@ -1,4 +1,7 @@
 #include "parser.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 // checks if curr_line is get request
 int find_method(char *curr_line) {
