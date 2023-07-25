@@ -48,11 +48,9 @@ void fill_req_content(const char *req_str, HttpRequest *request) {
 // returns 0 if valid request string
 // returns -1 if invaild request
 int parse_req(const char *req, HttpRequest *request) {
-    int len = strlen(req);
+    size_t len = strlen(req);
     char *curr_line = (char *)malloc(BUFSIZ * sizeof(char)); // current line
-    int pos = 0;
-
-    fflush(stdout); // TODO: fix this
+    size_t pos = 0;
 
     // loop through every line in request
     while (pos <= len) {

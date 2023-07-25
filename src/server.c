@@ -200,6 +200,5 @@ void process_req(const char *request_str, int client_fd) {
 exit:
     printf("\n");
     fflush(stdout);
-    free(incoming_request.value);
     free(filepath);
 }

@@ -3,10 +3,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 int init(void);
 
 char SERVING_DIR[BUFSIZ];
+
+void sigintHandler() {
+   exit(0);
+}
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -25,5 +30,7 @@ int main(int argc, char *argv[]) {
         perror(SERVING_DIR);
         exit(1);
     }
+
+	signal(SIGINT, sigintHandler);
     init();
 }

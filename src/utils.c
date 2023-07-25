@@ -55,7 +55,7 @@ char *read_file(const char *f_name, int *err, size_t *f_size) {
 
     if (f) {
         fseek(f, 0, SEEK_END);
-        length = ftell(f);
+        length =(size_t) ftell(f);
         fseek(f, 0, SEEK_SET);
 
         // 1 GiB; best not to load a whole large file in one string
