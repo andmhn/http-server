@@ -1,12 +1,12 @@
 # tool macros
 CC := clang
-CCFLAGS :=
+CCFLAGS := -pedantic-errors -Wall -Wextra -Werror
 DBGFLAGS := -g
 CCOBJFLAGS := $(CCFLAGS) -c
 
 # path macros
 BIN_PATH := bin
-OBJ_PATH := obj
+OBJ_PATH := $(BIN_PATH)/obj
 SRC_PATH := src
 DBG_PATH := debug
 
@@ -25,7 +25,9 @@ OBJ_DEBUG := $(addprefix $(DBG_PATH)/, $(addsuffix .o, $(notdir $(basename $(SRC
 
 # clean files list
 DISTCLEAN_LIST := $(OBJ) \
-                  $(OBJ_DEBUG)
+				  $(OBJ:.o=.d) \
+                  $(OBJ_DEBUG) \
+				  $(OBJ_DEBUG:.o=.d)
 CLEAN_LIST := $(TARGET) \
 			  $(TARGET_DEBUG) \
 			  $(DISTCLEAN_LIST)
@@ -33,15 +35,17 @@ CLEAN_LIST := $(TARGET) \
 # default rule
 default: makedir all
 
+-include ($(DEPENDS))
+
 # non-phony targets
 $(TARGET): $(OBJ)
 	$(CC) $(CCFLAGS) -o $@ $(OBJ)
 
 $(OBJ_PATH)/%.o: $(SRC_PATH)/%.c*
-	$(CC) $(CCOBJFLAGS) -o $@ $<
+	$(CC) $(CCOBJFLAGS) -MMD -MP -o $@ $<
 
 $(DBG_PATH)/%.o: $(SRC_PATH)/%.c*
-	$(CC) $(CCOBJFLAGS) $(DBGFLAGS) -o $@ $<
+	$(CC) $(CCOBJFLAGS) $(DBGFLAGS) -MMD -MP -o $@ $<
 
 $(TARGET_DEBUG): $(OBJ_DEBUG)
 	$(CC) $(CCFLAGS) $(DBGFLAGS) $(OBJ_DEBUG) -o $@
