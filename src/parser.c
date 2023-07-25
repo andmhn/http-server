@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-char * get_file_str(char * req_str){
+char * get_file_str(const char * req_str){
 	char *req_file = (char*)malloc(BUFSIZ * sizeof(char));
 
 	// fix garbage returns
@@ -31,7 +31,7 @@ int is_get_req(char * curr_line){
 }
 
 // returns get request string
-char* parse_get_req(char * req) {
+char* parse_get_req(const char * req) {
 	int len = strlen(req);
 	char *curr_line = (char*)malloc(500 * sizeof(char));
 	int pos = 0;

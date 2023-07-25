@@ -27,9 +27,9 @@ char header_404[] = "HTTP/1.0 404 Not Found\r\n\n";
 int init(void);
 void *get_in_addr(struct sockaddr *sa);
 int accept_req(int sockfd);
-void process_req(char *request_str, int client_fd);
+void process_req(const char *request_str, int client_fd);
 int verify_filepath(const char *file_path);
-char *get_filepath(char *get_str);
+char *get_filepath(const char *get_str);
 int handle_text_file(int sock_fd, char *filename);
 void send_file(int sock_fd, const char *f_name);
 
@@ -166,7 +166,7 @@ int handle_text_file(int sock_fd, char *filename) {
     return 0;
 }
 
-char *get_filepath(char *get_str) {
+char *get_filepath(const char *get_str) {
     char *filename = get_file_str(get_str);
     char *file_to_read = (char *) malloc(BUFSIZ * sizeof(char));
     memset(file_to_read, 0, BUFSIZ);
@@ -187,7 +187,7 @@ int verify_filepath(const char *file_path) {
 }
 
 // processes http requests and responds them
-void process_req(char *request_str, int client_fd) {
+void process_req(const char *request_str, int client_fd) {
     // Parse String
     char *get_req_str = parse_get_req(request_str);
     printf("%s\n", get_req_str);
@@ -195,23 +195,22 @@ void process_req(char *request_str, int client_fd) {
     char *filepath = get_filepath(get_req_str);
 
     // check if file exist
-    if (verify_filepath(filepath)) {
+    if (verify_filepath(filepath) == -1) {
+		perror(filepath);
         if (send(client_fd, header_404, strlen(header_404), 0) == -1)
             perror("send");
-        goto exit;
-    }
-
-    // handle binary file first
-    if (is_binary(filepath)) {
-        if (send(client_fd, header_ok, strlen(header_ok), 0) == -1)
-            perror("send");
-        send_file(client_fd, filepath);
         goto exit;
     }
 
     // sending 200 OK first
     if (send(client_fd, header_ok, strlen(header_ok), 0) == -1)
         perror("send");
+
+    // handle binary file first
+    if (is_binary(filepath)) {
+        send_file(client_fd, filepath);
+        goto exit;
+    }
 
     // check file loading error
     if (handle_text_file(client_fd, filepath) == -1) {
