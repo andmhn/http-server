@@ -1,11 +1,4 @@
 {
-    "makefile.launchConfigurations": [
-        {
-            "cwd": "/home/anand/projects/http-server/bin",
-            "binaryPath": "/home/anand/projects/http-server/bin/http-server",
-            "binaryArgs": ["~/repos/site"]
-        }
-    ],
     "files.associations": {
         "stdlib.h": "c"
     },

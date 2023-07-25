@@ -29,7 +29,7 @@ DEP_DEBUG := $(OBJ_DEBUG:.o=.d)
 DISTCLEAN_LIST := $(OBJ) \
 				  $(DEPENDS) \
                   $(OBJ_DEBUG) \
-				  $(DEP_DEBUG )
+				  $(DEP_DEBUG)
 CLEAN_LIST := $(TARGET) \
 			  $(TARGET_DEBUG) \
 			  $(DISTCLEAN_LIST)

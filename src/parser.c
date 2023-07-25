@@ -56,8 +56,9 @@ int parse_req(const char *req, HttpRequest *request) {
 
     // loop through every line in request
     while (pos <= len) {
-        memset(curr_line, 0, 500); // clear junk first
+        memset(curr_line, 0, BUFSIZ); // clear junk first
 
+        // load current line
         int i = 0;
         while (req[pos] != '\n') {
             curr_line[i] = req[pos];
@@ -65,7 +66,7 @@ int parse_req(const char *req, HttpRequest *request) {
             i++;
         }
         curr_line[i + 1] = '\0';
-        // printf(" curr line: %s\n", curr_line);
+
         // checking if curr_line is valid
         request->method = find_method(curr_line);
         if (request->method == -1)
