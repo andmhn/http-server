@@ -22,12 +22,14 @@ TARGET_DEBUG := $(DBG_PATH)/$(TARGET_NAME)
 SRC := $(foreach x, $(SRC_PATH), $(wildcard $(addprefix $(x)/*,.c*)))
 OBJ := $(addprefix $(OBJ_PATH)/, $(addsuffix .o, $(notdir $(basename $(SRC)))))
 OBJ_DEBUG := $(addprefix $(DBG_PATH)/, $(addsuffix .o, $(notdir $(basename $(SRC)))))
+DEPENDS := $(OBJ:.o=.d)
+DEP_DEBUG := $(OBJ_DEBUG:.o=.d)
 
 # clean files list
 DISTCLEAN_LIST := $(OBJ) \
-				  $(OBJ:.o=.d) \
+				  $(DEPENDS) \
                   $(OBJ_DEBUG) \
-				  $(OBJ_DEBUG:.o=.d)
+				  $(DEP_DEBUG )
 CLEAN_LIST := $(TARGET) \
 			  $(TARGET_DEBUG) \
 			  $(DISTCLEAN_LIST)
@@ -60,6 +62,7 @@ all: $(TARGET)
 
 .PHONY: debug
 debug: $(TARGET_DEBUG)
+    -include ($(DEP_DEBUG))
 
 .PHONY: clean
 clean:
