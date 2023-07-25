@@ -29,7 +29,7 @@ void *get_in_addr(struct sockaddr *sa);
 int accept_req(int sockfd);
 void process_req(const char *request_str, int client_fd);
 int verify_filepath(const char *file_path);
-char *get_filepath(const char *get_str);
+char *make_filepath(const char *get_str);
 int handle_text_file(int sock_fd, char *filename);
 void send_file(int sock_fd, const char *f_name);
 
@@ -166,14 +166,12 @@ int handle_text_file(int sock_fd, char *filename) {
     return 0;
 }
 
-char *get_filepath(const char *get_str) {
-    char *filename = get_file_str(get_str);
-    char *file_to_read = (char *) malloc(BUFSIZ * sizeof(char));
+char *make_filepath(const char *filename) {
+    char *file_to_read = (char *)malloc(BUFSIZ * sizeof(char));
     memset(file_to_read, 0, BUFSIZ);
     strncpy(file_to_read, SERVING_DIR, strlen(SERVING_DIR)); // making the path
     strncat(file_to_read, filename, strlen(filename));
 
-    free(filename);
     return file_to_read;
 }
 
@@ -189,14 +187,17 @@ int verify_filepath(const char *file_path) {
 // processes http requests and responds them
 void process_req(const char *request_str, int client_fd) {
     // Parse String
-    char *get_req_str = parse_get_req(request_str);
-    printf("%s\n", get_req_str);
+    HttpRequest incoming_request;
+    if (parse_req(request_str, &incoming_request) == -1) {
+        fprintf(stderr, "Got Invalid request\n");
+        return;
+    }
 
-    char *filepath = get_filepath(get_req_str);
+    char *filepath = make_filepath(incoming_request.value);
 
     // check if file exist
     if (verify_filepath(filepath) == -1) {
-		perror(filepath);
+        perror(filepath);
         if (send(client_fd, header_404, strlen(header_404), 0) == -1)
             perror("send");
         goto exit;
@@ -218,8 +219,8 @@ void process_req(const char *request_str, int client_fd) {
     }
 
 exit:
-    free(get_req_str);
-
     printf("\n");
     fflush(stdout);
+    free(incoming_request.value);
+    free(filepath);
 }
