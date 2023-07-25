@@ -16,6 +16,10 @@ int main(int argc, char *argv[]) {
     strncpy(SERVING_DIR, argv[1], strlen(argv[1]));
 
     if (is_dir(SERVING_DIR)) {
+        if (!has_permission(SERVING_DIR)) {
+            printf("Access Denied\n");
+            exit(1);
+        }
         printf("Serving in: %s\n\n", SERVING_DIR);
     } else {
         perror(SERVING_DIR);

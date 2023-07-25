@@ -1,4 +1,15 @@
 #include "utils.h"
+#include <stdbool.h>
+#include <sys/stat.h>
+
+bool has_permission(const char *filename) {
+    struct stat fb;
+    int res = stat(filename, &fb);
+    if (res == -1) {
+        return false;
+    }
+    return true;
+}
 
 bool is_dir(const char *path) {
     DIR *dir = opendir(path);
