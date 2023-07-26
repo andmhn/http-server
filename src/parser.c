@@ -26,6 +26,7 @@ int find_method(char *curr_line) {
 
 // find values of request
 void fill_req_content(const char *req_str, HttpRequest *request) {
+    // TODO handle special charcters in filename
     char *req_value = (char *)malloc(BUFSIZ * sizeof(char));
 
     // fix garbage returns

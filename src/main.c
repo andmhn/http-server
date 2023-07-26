@@ -1,17 +1,15 @@
 #include "utils.h"
+#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <signal.h>
 
 int init(void);
 
 char SERVING_DIR[BUFSIZ];
 
-void sigintHandler() {
-   exit(0);
-}
+void sigintHandler() { exit(0); }
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -31,6 +29,6 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-	signal(SIGINT, sigintHandler);
+    signal(SIGINT, sigintHandler);
     init();
 }

@@ -7,13 +7,16 @@
 
 extern char SERVING_DIR[];
 
+// Singly linked list node
 struct entry {
     char *data;
-    LIST_ENTRY(entry) entries; /* List */
+    SLIST_ENTRY(entry) entries; /* List */
 };
 
-LIST_HEAD(listhead, entry);
+SLIST_HEAD(slisthead, entry); // struct for head node
 
+// puts folder name to title
+// and returns html header
 char *make_header(const char *folder) {
     char *header = malloc(BUFSIZ);
 
@@ -29,70 +32,84 @@ char *make_header(const char *folder) {
     return header;
 }
 
-char* strip_root_folder(const char* path){
-	char * stripped = malloc(strlen(path) * sizeof(char));
-	int pos = (int)strlen(SERVING_DIR);
-	int i = 0;
-	while(path[pos] != '\0')
-		stripped[i++] = path[pos++];
+// strip out root folder from path using SERVING_DIR variable
+char *strip_root_folder(const char *path) {
+    char *stripped = malloc(strlen(path) * sizeof(char));
+    int pos = (int)strlen(SERVING_DIR); //	starting position to copy
+    int i = 0;
+    while (path[pos] != '\0')
+        stripped[i++] = path[pos++];
 
-	stripped[i] = '\0';
-	return stripped;
+    stripped[i] = '\0'; // null termination
+    return stripped;
 }
 
-// constructs html
-char *make_html_list(const char *content, const char *folder_name) {
+// constructs html list with link to that file
+char *make_html_list(const char *content, const char *root_folder) {
     char *list = malloc(BUFSIZ * sizeof(char));
-	memset(list, 0, BUFSIZ);
+    memset(list, 0, BUFSIZ);
 
-	char * root = strip_root_folder(folder_name);
-    sprintf(list, "<li><a href=\"%s/%s\">%s</a></li>", root, content, content);
+    sprintf(list, "<li><a href=\"%s/%s\">%s</a></li>", root_folder, content,
+            content);
 
-	free(root);
     return list;
 }
 
+// puts all files in folder to list
 void get_folder_contents(const char *folder_name,
-                         struct listhead *content_list) {
-    struct dirent *entry;
-    DIR *fb = opendir(folder_name);
+                         struct slisthead *content_list) {
+    struct dirent *dir_entry;
+    DIR *dirp = opendir(folder_name); // directory pointer
 
-    if (fb == NULL) {
+    if (dirp == NULL) {
         perror("opendir");
         return;
     }
 
-	// TODO skip . and ..
-    while ((entry = readdir(fb))) {
+    // TODO skip . and ..
 
-        struct entry *content_node = malloc(sizeof(struct entry));
+    // loop untill end of entry
+    while ((dir_entry = readdir(dirp))) {
+        struct entry *content_node =
+            malloc(sizeof(struct entry)); // create new node
         content_node->data = malloc(BUFSIZ * sizeof(char));
-		memset(content_node->data, 0, BUFSIZ);
-        strncat(content_node->data, entry->d_name, strlen(entry->d_name));
+        memset(content_node->data, 0, BUFSIZ); // initialize to 0
 
-        LIST_INSERT_HEAD(content_list, content_node, entries);
+        // put current file entry to node
+        strncat(content_node->data, dir_entry->d_name,
+                strlen(dir_entry->d_name));
+        // insert current node to list
+        SLIST_INSERT_HEAD(content_list, content_node, entries);
     }
-    closedir(fb);
+    closedir(dirp);
 }
 
 void send_folder_content(const char *folder_name, int client_fd) {
-	// TODO check if exist index.html file
-    struct listhead content_list;
-    LIST_INIT(&content_list);
-
-	puts(folder_name);
-    get_folder_contents(folder_name, &content_list);
-
+    char *root_folder = strip_root_folder(folder_name);
     char *header = make_header(folder_name);
+
+    // TODO check if exist index.html file
+
+    // send html header to client
     send(client_fd, header, strlen(header), 0);
 
-    for (struct entry *np = content_list.lh_first; np; np = LIST_NEXT(np, entries)) {
-        char *list = make_html_list(np->data, folder_name);
-        send(client_fd, list, strlen(list), 0);
-		free(list);
+    struct slisthead content_list; // linked list
+    SLIST_INIT(&content_list);     // initialize head node
+
+    // load all the folder contents
+    get_folder_contents(folder_name, &content_list);
+
+    // loop through each entry in content list
+    struct entry *np;
+    SLIST_FOREACH(np, &content_list, entries) {
+        char *list = make_html_list(np->data, root_folder); // make html list
+        send(client_fd, list, strlen(list), 0); // send list to client
+        free(list);
     }
-	free(header);
+    // cleanup
+    SLIST_INIT(&content_list);
+    free(header);
+    free(root_folder);
 
     return;
 }
-
