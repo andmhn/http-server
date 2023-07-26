@@ -13,6 +13,8 @@
 #include <string.h>
 #include <unistd.h>
 
+void send_folder_content(const char *folder_name, int client_fd);
+
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa) {
     if (sa->sa_family == AF_INET) {
@@ -132,15 +134,27 @@ void send_file(int sock_fd, const char *f_name) {
 }
 
 // thinking on file path
-int handle_text_file(int sock_fd, char *filename) {
-    if (ends_with(filename, "/")) {
+int handle_request_value(int sock_fd, char *req_value) {
+    char *filename = make_filepath(req_value);
+
+    // if it's root directory
+    if (strcmp(req_value, "/") == 0) {
         strncat(filename, "index.html", 11);
-		// TODO check if it exist
+
+        if (verify_filepath(filename) == -1)
+            send_folder_content(SERVING_DIR, sock_fd);
+        else
+            send_file(sock_fd, filename);
     }
-    // TODO check if path is directory
 
-    send_file(sock_fd, filename);
+    // check if path is directory
+    else if (is_dir(filename))
+        send_folder_content(filename, sock_fd);
 
+    else
+        send_file(sock_fd, filename);
+
+    free(filename);
     return 0;
 }
 
@@ -187,14 +201,8 @@ void process_req(const char *request_str, int client_fd) {
     if (send(client_fd, header_ok, strlen(header_ok), 0) == -1)
         perror("send");
 
-    // handle binary file first
-    if (is_binary(filepath)) {
-        send_file(client_fd, filepath);
-        goto exit;
-    }
-
-    // check file loading error
-    if (handle_text_file(client_fd, filepath) == -1) {
+    // serving content
+    if (handle_request_value(client_fd, incoming_request.value) == -1) {
         goto exit;
     }
 

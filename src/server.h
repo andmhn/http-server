@@ -15,5 +15,5 @@ int accept_req(int sockfd);
 void process_req(const char *request_str, int client_fd);
 int verify_filepath(const char *file_path);
 char *make_filepath(const char *get_str);
-int handle_text_file(int sock_fd, char *filename);
+int handle_request_value(int sock_fd, char *filename);
 void send_file(int sock_fd, const char *f_name);
