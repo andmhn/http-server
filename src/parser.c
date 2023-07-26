@@ -12,13 +12,13 @@ int find_method(char *curr_line) {
     }
     method[i + 1] = '\0';
 
-    if (!strcmp(method, "GET ")) { // space because length of method is 3
+    if (!strncmp(method, "GET ", 4)) { // space because length of method is 3
         return GET;
     }
-    if (!strcmp(method, "HEAD")) {
+    if (!strncmp(method, "HEAD", 4)) {
         return HEAD;
     }
-    if (!strcmp(method, "POST")) {
+    if (!strncmp(method, "POST", 4)) {
         return POST;
     }
     return -1;

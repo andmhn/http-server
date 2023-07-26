@@ -123,8 +123,8 @@ void send_file(int sock_fd, const char *f_name) {
             break;
         }
 
-        // send here
-        if (send(sock_fd, buffer, BUFFERSIZE, 0) == -1)
+        // send only read bytes
+        if (send(sock_fd, buffer, bytesread, 0) == -1)
             perror("send");
     }
 
@@ -135,6 +135,7 @@ void send_file(int sock_fd, const char *f_name) {
 int handle_text_file(int sock_fd, char *filename) {
     if (ends_with(filename, "/")) {
         strncat(filename, "index.html", 11);
+		// TODO check if it exist
     }
     // TODO check if path is directory
 
