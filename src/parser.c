@@ -64,6 +64,7 @@ int parse_req(const char *req, HttpRequest *request) {
             pos++;
             i++;
         }
+        pos ++; // skip carriage character
         curr_line[i + 1] = '\0';
 
         // checking if curr_line is valid
@@ -72,7 +73,6 @@ int parse_req(const char *req, HttpRequest *request) {
             continue;
         else
             break;
-        pos += 2;
     }
     if (request->method == -1) {
         fputs("Invalid Request\n", stderr);

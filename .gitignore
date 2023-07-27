@@ -4,3 +4,4 @@ obj/
 compile_commands.json
 .cache/
 guide.txt
+.gdb_history

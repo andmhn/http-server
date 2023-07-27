@@ -1,6 +1,6 @@
 # tool macros
 CC := clang
-CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wconversion
+CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wconversion -Wfloat-equal  -Wundef  -Wshadow  -Wpointer-arith -Wstrict-overflow=5 -Wunreachable-code
 DBGFLAGS := -g
 COBJFLAGS := $(CFLAGS) -c
 
