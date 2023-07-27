@@ -45,13 +45,11 @@ char *strip_root_folder(const char *path) {
 }
 
 // constructs html list with link to that file
-char *make_html_list(const char *content, const char *root_folder) {
+char *make_html_list(const char *content, char *folder) {
     char *list = malloc(BUFSIZ * sizeof(char));
     memset(list, 0, BUFSIZ);
 
-    sprintf(list, "<li><a href=\"%s/%s\">%s</a></li>", root_folder, content,
-            content);
-
+    sprintf(list, "<li><a href=\"%s%s\">%s</a></li>", folder, content, content);
     return list;
 }
 
@@ -65,8 +63,6 @@ void get_folder_contents(const char *folder_name,
         perror("opendir");
         return;
     }
-
-    // TODO skip . and ..
 
     // loop untill end of entry
     while ((dir_entry = readdir(dirp))) {
@@ -85,11 +81,11 @@ void get_folder_contents(const char *folder_name,
 }
 
 void send_folder_content(const char *folder_name, int client_fd) {
-    char *root_folder = strip_root_folder(folder_name);
-    char *header = make_header(folder_name);
-
-    // TODO check if exist index.html file
-
+    char *curr_folder = strip_root_folder(folder_name);
+    if (curr_folder[strlen(curr_folder) - 1] != '/') {
+        strncat(curr_folder, "/", 1);
+    }
+    char *header = make_header(curr_folder);
     // send html header to client
     send(client_fd, header, strlen(header), 0);
 
@@ -102,14 +98,14 @@ void send_folder_content(const char *folder_name, int client_fd) {
     // loop through each entry in content list
     struct entry *np;
     SLIST_FOREACH(np, &content_list, entries) {
-        char *list = make_html_list(np->data, root_folder); // make html list
+        char *list = make_html_list(np->data, curr_folder); // make html list
         send(client_fd, list, strlen(list), 0); // send list to client
         free(list);
     }
     // cleanup
     SLIST_INIT(&content_list);
     free(header);
-    free(root_folder);
+    free(curr_folder);
 
     return;
 }

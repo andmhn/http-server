@@ -64,7 +64,7 @@ int parse_req(const char *req, HttpRequest *request) {
             pos++;
             i++;
         }
-        pos ++; // skip carriage character
+        pos++; // skip carriage character
         curr_line[i + 1] = '\0';
 
         // checking if curr_line is valid
