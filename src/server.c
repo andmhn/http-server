@@ -75,7 +75,7 @@ int init(void) {
     return 0;
 }
 
-int accept_req(int sockfd) {
+void accept_req(int sockfd) {
     struct sockaddr_storage client_addr;
     socklen_t sin_size;
     int client_fd;
@@ -97,7 +97,11 @@ int accept_req(int sockfd) {
         printf("server: got connection from %s\n", s);
 
         // recieving
-        recv(client_fd, request_str, BUFSIZ, 0);
+        if (recv(client_fd, request_str, BUFSIZ, 0) == -1) {
+            perror("recv");
+            close(client_fd);
+            break;
+        }
 
         process_req(request_str, client_fd);
 
@@ -126,8 +130,10 @@ void send_file(int sock_fd, const char *f_name) {
         }
 
         // send only read bytes
-        if (send(sock_fd, buffer, bytesread, 0) == -1)
+        if (send(sock_fd, buffer, bytesread, 0) == -1) {
             perror("send");
+            break;
+        }
     }
 
     fclose(fp1);

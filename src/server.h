@@ -11,7 +11,7 @@ char header_404[] = "HTTP/1.0 404 Not Found\r\n\n";
 // Function declarations
 int init(void);
 void *get_in_addr(struct sockaddr *sa);
-int accept_req(int sockfd);
+void accept_req(int sockfd);
 void process_req(const char *request_str, int client_fd);
 int verify_filepath(const char *file_path);
 char *make_filepath(const char *get_str);
