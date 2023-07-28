@@ -1,0 +1,22 @@
+name: Make
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build
+      # Build your program with the given configuration
+      run: make test
+
+    - name: Test
+      working-directory: ${{github.workspace}}/bin
+      run: ./test-http-server
