@@ -84,3 +84,79 @@ int parse_req(const char *req, HttpRequest *request) {
     free(curr_line);
     return 0;
 }
+
+// parse Percent-encoding charcters in url
+char *parse_encoded_url(const char *url) {
+    char *parsed_url = malloc(sizeof(char) * BUFSIZ);
+    memset(parsed_url, 0, BUFSIZ);
+
+    char prev_char = url[0];
+    char encoding[3]; // it will store encoded character after %
+
+    int i; // current position of url
+    int	j; // position for parsed url
+    for (i = 0, j = 0; url[i] != '\0'; i++, j++) {
+        if (url[i] == '%') {
+            prev_char = url[i];
+            j--;
+            continue;
+        }
+        if (url[i] == '+') { // handle '+' first
+			parsed_url[j] = ' ';
+            continue;
+        }
+        parsed_url[j] = url[i];
+
+        if (prev_char == '%') {
+            // get encoded characters
+            encoding[0] = url[i];
+            encoding[1] = url[++i];
+            encoding[2] = '\0';
+
+            // assign encoding to appropriate character
+            if (!strncmp(encoding, "20", 2))
+                parsed_url[j] = ' ';
+            else if (!strncmp(encoding, "26", 2))
+                parsed_url[j] = '&';
+            else if (!strncmp(encoding, "3A", 2))
+                parsed_url[j] = ':';
+            else if (!strncmp(encoding, "2F", 2))
+                parsed_url[j] = '/';
+            else if (!strncmp(encoding, "3F", 2))
+                parsed_url[j] = '?';
+            else if (!strncmp(encoding, "23", 2))
+                parsed_url[j] = '#';
+            else if (!strncmp(encoding, "5B", 2))
+                parsed_url[j] = '[';
+            else if (!strncmp(encoding, "5D", 2))
+                parsed_url[j] = ']';
+            else if (!strncmp(encoding, "40", 2))
+                parsed_url[j] = '@';
+            else if (!strncmp(encoding, "21", 2))
+                parsed_url[j] = '!';
+            else if (!strncmp(encoding, "24", 2))
+                parsed_url[j] = '$';
+            else if (!strncmp(encoding, "27", 2))
+                parsed_url[j] = '\'';
+            else if (!strncmp(encoding, "28", 2))
+                parsed_url[j] = '(';
+            else if (!strncmp(encoding, "29", 2))
+                parsed_url[j] = ')';
+            else if (!strncmp(encoding, "2A", 2))
+                parsed_url[j] = '*';
+            else if (!strncmp(encoding, "2B", 2))
+                parsed_url[j] = '+';
+            else if (!strncmp(encoding, "2C", 2))
+                parsed_url[j] = ',';
+            else if (!strncmp(encoding, "3B", 2))
+                parsed_url[j] = ';';
+            else if (!strncmp(encoding, "3D", 2))
+                parsed_url[j] = '=';
+            else if (!strncmp(encoding, "25", 2))
+                parsed_url[j] = '%';
+        }
+        prev_char = url[i];
+    }
+    parsed_url[j] = '\0'; // null termination
+    return parsed_url;
+}

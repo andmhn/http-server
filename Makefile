@@ -23,7 +23,6 @@ TARGET_TEST := $(BIN_PATH)/test-$(TARGET_NAME)
 TEST_SRC := $(foreach x, $(SRC_PATH), $(wildcard $(addprefix $(x)/*,_test.c*)))
 TEST_OBJ := $(addprefix $(OBJ_PATH)/, $(addsuffix .o, $(notdir $(basename $(TEST_SRC)))))
 TEST_TARGET_SRC := $(TEST_SRC:_test.c=.c)
-#TEST_TARGET_OBJ := $(TEST_TARGET_SRC:.c=.o)
 TEST_TARGET_OBJ := $(addprefix $(OBJ_PATH)/, $(addsuffix .o, $(notdir $(basename $(TEST_TARGET_SRC)))))
 
 SRC := $(filter-out $(TEST_SRC), $(foreach x, $(SRC_PATH), $(wildcard $(addprefix $(x)/*,.c*))))

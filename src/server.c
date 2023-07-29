@@ -142,6 +142,7 @@ void send_file(int sock_fd, const char *f_name) {
 // thinking on file path
 int handle_request_value(int sock_fd, char *req_value) {
     char *filename = make_filepath(req_value);
+    char *file_path = parse_encoded_url(filename);
 
     // if it's root directory
     if (strcmp(req_value, "/") == 0) {
@@ -154,12 +155,13 @@ int handle_request_value(int sock_fd, char *req_value) {
     }
 
     // check if path is directory
-    else if (is_dir(filename))
-        send_folder_content(filename, sock_fd);
+    else if (is_dir(file_path))
+        send_folder_content(file_path, sock_fd);
 
     else
-        send_file(sock_fd, filename);
+        send_file(sock_fd, file_path);
 
+    free(file_path);
     free(filename);
     return 0;
 }
@@ -194,10 +196,11 @@ void process_req(const char *request_str, int client_fd) {
     // TODO implement head and post
 
     char *filepath = make_filepath(incoming_request.value);
+    char *parsed_url = parse_encoded_url(filepath);
 
     // check if file exist
-    if (verify_filepath(filepath) == -1) {
-        perror(filepath);
+    if (verify_filepath(parsed_url) == -1) {
+        perror(parsed_url);
         if (send(client_fd, header_404, strlen(header_404), 0) == -1)
             perror("send");
         goto exit;
@@ -216,4 +219,5 @@ exit:
     printf("\n");
     fflush(stdout);
     free(filepath);
+    free(parsed_url);
 }
