@@ -193,8 +193,6 @@ void process_req(const char *request_str, int client_fd) {
         return;
     }
 
-    // TODO implement head and post
-
     char *filepath = make_filepath(incoming_request.value);
     char *parsed_url = parse_encoded_url(filepath);
 
@@ -202,6 +200,21 @@ void process_req(const char *request_str, int client_fd) {
     if (verify_filepath(parsed_url) == -1) {
         perror(parsed_url);
         if (send(client_fd, header_404, strlen(header_404), 0) == -1)
+            perror("send");
+        goto exit;
+    }
+
+    // check permission to view content
+    if (!has_permission(parsed_url)) {
+        if (send(client_fd, header_403, strlen(header_403), 0) == -1)
+            perror("send");
+        goto exit;
+    }
+
+    // forbid . and .. in url
+    if (str_starts_with(incoming_request.value, "./") ||
+        str_starts_with(incoming_request.value, "../")) {
+        if (send(client_fd, header_400, strlen(header_400), 0) == -1)
             perror("send");
         goto exit;
     }

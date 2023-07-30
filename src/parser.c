@@ -26,7 +26,6 @@ int find_method(char *curr_line) {
 
 // find values of request
 void fill_req_content(const char *req_str, HttpRequest *request) {
-    // TODO handle special charcters in filename
     char *req_value = (char *)malloc(BUFSIZ * sizeof(char));
 
     // fix garbage returns
@@ -93,16 +92,16 @@ char *parse_encoded_url(const char *url) {
     char prev_char = url[0];
     char encoding[3]; // it will store encoded character after %
 
-    int i; // current position of url
-    int	j; // position for parsed url
-    for (i = 0, j = 0; url[i] != '\0'; i++, j++) {
+    int i = 0; // current position of url
+    int j = 0; // position for parsed url
+    for (; url[i] != '\0'; i++, j++) {
         if (url[i] == '%') {
             prev_char = url[i];
             j--;
             continue;
         }
         if (url[i] == '+') { // handle '+' first
-			parsed_url[j] = ' ';
+            parsed_url[j] = ' ';
             continue;
         }
         parsed_url[j] = url[i];

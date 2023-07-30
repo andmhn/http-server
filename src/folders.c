@@ -21,14 +21,28 @@ SLIST_HEAD(slisthead, entry); // struct for head node
 char *make_header(const char *folder) {
     char *header = malloc(BUFSIZ);
 
+    char *css =
+        "body{max-width:650px;margin:40px auto;padding:0 10px;font:18px/1.5 "
+        "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica "
+        "Neue\", Arial, \"Noto Sans\", sans-serif, \"Apple Color Emoji\", "
+        "\"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color "
+        "Emoji\";color:#444}h1,h2,h3{line-height:1.2}@media "
+        "(prefers-color-scheme: "
+        "dark){body{color:#c9d1d9;background:#0d1117}a:link{color:#58a6ff}a:"
+        "visited{color:#8e96f0}}";
+
     char *format = "<!DOCTYPE html>\
 <head>\
-	<title>%s</title>\
+	<title>Listing files in: %s</title>\
+	<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\
+	<style>%s</style>\
 </head>\
+<h1>Listing Files in %s</h1>\
+<h2><a href=\"..\" style = \"text-decoration: none\">..</a></h2>\
 \
 ";
 
-    sprintf(header, format, folder);
+    sprintf(header, format, folder, css, folder);
 
     return header;
 }
@@ -67,6 +81,11 @@ void get_folder_contents(const char *folder_name, struct slisthead *dir_list,
 
     // loop untill end of entry
     while ((dir_entry = readdir(dirp))) {
+        // skip . and ..
+        if (!strncmp(dir_entry->d_name, ".", 1) ||
+            !strncmp(dir_entry->d_name, "..", 2))
+            continue;
+
         struct entry *node = malloc(sizeof(struct entry)); // create new node
         node->data = malloc(BUFSIZ * sizeof(char));
         memset(node->data, 0, BUFSIZ); // initialize to 0

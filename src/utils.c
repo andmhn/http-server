@@ -93,3 +93,12 @@ char *read_file(const char *f_name, int *err, size_t *f_size) {
 
     return buffer;
 }
+
+bool str_starts_with(const char *str, const char *word) {
+    size_t word_len = strlen(word);
+    for (size_t i = 0; i < word_len; i++) {
+        if (word[i] != str[i])
+            return false;
+    }
+    return true;
+}
