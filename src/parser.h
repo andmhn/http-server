@@ -1,4 +1,4 @@
-enum request { GET, HEAD, POST };
+enum request { GET = 0, HEAD, POST };
 
 // contains the request and it's content
 typedef struct HttpRequest {

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 int init(void);
 
@@ -28,6 +29,7 @@ int main(int argc, char *argv[]) {
         perror(SERVING_DIR);
         exit(1);
     }
+	chdir(SERVING_DIR);
 
     signal(SIGINT, sigintHandler);
     init();

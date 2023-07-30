@@ -140,18 +140,15 @@ void send_file(int sock_fd, const char *f_name) {
 }
 
 // thinking on file path
-int handle_request_value(int sock_fd, char *req_value) {
-    char *filename = make_filepath(req_value);
-    char *file_path = parse_encoded_url(filename);
-
+void handle_request_value(int sock_fd, char *file_path) {
     // if it's root directory
-    if (strcmp(req_value, "/") == 0) {
-        strncat(filename, "index.html", 11);
+    if (strcmp(file_path, "./") == 0) {
+        strncat(file_path, "index.html", 11);
 
-        if (verify_filepath(filename) == -1)
-            send_folder_content(SERVING_DIR, sock_fd);
+        if (verify_filepath(file_path) == -1)
+            send_folder_content("./", sock_fd);
         else
-            send_file(sock_fd, filename);
+            send_file(sock_fd, file_path);
     }
 
     // check if path is directory
@@ -160,28 +157,6 @@ int handle_request_value(int sock_fd, char *req_value) {
 
     else
         send_file(sock_fd, file_path);
-
-    free(file_path);
-    free(filename);
-    return 0;
-}
-
-char *make_filepath(const char *filename) {
-    char *file_to_read = (char *)malloc(BUFSIZ * sizeof(char));
-    memset(file_to_read, 0, BUFSIZ);
-    strncpy(file_to_read, SERVING_DIR, strlen(SERVING_DIR)); // making the path
-    strncat(file_to_read, filename, strlen(filename));
-
-    return file_to_read;
-}
-
-int verify_filepath(const char *file_path) {
-    FILE *temp = fopen(file_path, "rb");
-    if (temp == NULL) {
-        return -1;
-    }
-    fclose(temp);
-    return 0;
 }
 
 // processes http requests and responds them
@@ -193,20 +168,36 @@ void process_req(const char *request_str, int client_fd) {
         return;
     }
 
-    char *filepath = make_filepath(incoming_request.value);
+    // send head
+    if (incoming_request.method == HEAD) {
+        if (send(client_fd, header_ok, strlen(header_ok), 0) == -1)
+            perror("send");
+
+        return;
+    }
+
+    // all other requests
+    if (incoming_request.method > 1) {
+        if (send(client_fd, header_501, strlen(header_501), 0) == -1)
+            perror("send");
+        return;
+    }
+
+    char filepath[strlen(incoming_request.value) + 1];
+    sprintf(filepath, ".%s", incoming_request.value); // prepending with .
     char *parsed_url = parse_encoded_url(filepath);
+
+    // check permission to view content
+    if (!has_permission(parsed_url)) {
+        if (send(client_fd, header_403, strlen(header_403), 0) == -1)
+            perror("send");
+        goto exit;
+    }
 
     // check if file exist
     if (verify_filepath(parsed_url) == -1) {
         perror(parsed_url);
         if (send(client_fd, header_404, strlen(header_404), 0) == -1)
-            perror("send");
-        goto exit;
-    }
-
-    // check permission to view content
-    if (!has_permission(parsed_url)) {
-        if (send(client_fd, header_403, strlen(header_403), 0) == -1)
             perror("send");
         goto exit;
     }
@@ -224,13 +215,11 @@ void process_req(const char *request_str, int client_fd) {
         perror("send");
 
     // serving content
-    if (handle_request_value(client_fd, incoming_request.value) == -1) {
-        goto exit;
-    }
+     handle_request_value(client_fd, parsed_url);
 
 exit:
     printf("\n");
     fflush(stdout);
-    free(filepath);
     free(parsed_url);
+	free(incoming_request.value);
 }

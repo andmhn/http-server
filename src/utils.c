@@ -102,3 +102,13 @@ bool str_starts_with(const char *str, const char *word) {
     }
     return true;
 }
+
+int verify_filepath(const char *file_path) {
+    FILE *temp = fopen(file_path, "rb");
+    if (temp == NULL) {
+        return -1;
+    }
+    fclose(temp);
+    return 0;
+}
+

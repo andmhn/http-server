@@ -12,3 +12,4 @@ bool is_binary(const char *f_name);
 bool ends_with(const char *str, const char *end_str);
 bool has_permission(const char *filename);
 bool str_starts_with(const char *str, const char *word);
+int verify_filepath(const char *file_path);

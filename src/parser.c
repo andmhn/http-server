@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+// TODO add other requests
 // checks if curr_line is get request
 int find_method(char *curr_line) {
     char method[6];
@@ -49,7 +50,7 @@ void fill_req_content(const char *req_str, HttpRequest *request) {
 // returns -1 if invaild request
 int parse_req(const char *req, HttpRequest *request) {
     size_t len = strlen(req);
-    char *curr_line = (char *)malloc(BUFSIZ * sizeof(char)); // current line
+    char curr_line[BUFSIZ];
     size_t pos = 0;
 
     // loop through every line in request
@@ -80,7 +81,6 @@ int parse_req(const char *req, HttpRequest *request) {
     fill_req_content(curr_line, request);
 
     printf("%s\n", curr_line);
-    free(curr_line);
     return 0;
 }
 
