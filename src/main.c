@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
         perror(SERVING_DIR);
         exit(1);
     }
-	chdir(SERVING_DIR);
+    chdir(SERVING_DIR);
 
     signal(SIGINT, sigintHandler);
     init();

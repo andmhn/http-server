@@ -183,21 +183,21 @@ void process_req(const char *request_str, int client_fd) {
         return;
     }
 
-    char filepath[strlen(incoming_request.value) + 1];
+    char filepath[strlen(incoming_request.value) + 2];
     sprintf(filepath, ".%s", incoming_request.value); // prepending with .
     char *parsed_url = parse_encoded_url(filepath);
-
-    // check permission to view content
-    if (!has_permission(parsed_url)) {
-        if (send(client_fd, header_403, strlen(header_403), 0) == -1)
-            perror("send");
-        goto exit;
-    }
 
     // check if file exist
     if (verify_filepath(parsed_url) == -1) {
         perror(parsed_url);
         if (send(client_fd, header_404, strlen(header_404), 0) == -1)
+            perror("send");
+        goto exit;
+    }
+
+    // check permission to view content
+    if (verify_filepath(parsed_url) && !has_permission(parsed_url)) {
+        if (send(client_fd, header_403, strlen(header_403), 0) == -1)
             perror("send");
         goto exit;
     }
@@ -215,11 +215,11 @@ void process_req(const char *request_str, int client_fd) {
         perror("send");
 
     // serving content
-     handle_request_value(client_fd, parsed_url);
+    handle_request_value(client_fd, parsed_url);
 
 exit:
     printf("\n");
     fflush(stdout);
     free(parsed_url);
-	free(incoming_request.value);
+    free(incoming_request.value);
 }

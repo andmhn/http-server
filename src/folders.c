@@ -6,14 +6,6 @@
 #include <sys/queue.h>
 #include <sys/socket.h>
 
-// Singly linked list node
-struct entry {
-    char *data;
-    SLIST_ENTRY(entry) entries; /* List */
-};
-
-SLIST_HEAD(slisthead, entry); // struct for head node
-
 // puts folder name to title
 // and returns html header
 char *make_header(const char *folder) {
@@ -45,9 +37,17 @@ char *make_header(const char *folder) {
     return header;
 }
 
-// puts all files in folder to list
-void get_folder_contents(const char *folder_name, struct slisthead *dir_list,
-                         struct slisthead *file_list) {
+// create lists out of name and sends it
+void send_list(char *content, size_t size, int sock) {
+        char html_list[100 + (2 * size)]; // 100 for html tags
+
+		sprintf(html_list, "<li><a href=\"%s\">%s</a></li>", content, content);
+
+ 		send(sock, html_list, strlen(html_list), 0); // send list to client
+}
+
+// serves folder contents as lists in html
+void serve_folder_contents(const char *folder_name, int sock) {
     struct dirent *dir_entry;
     DIR *dirp = opendir(folder_name); // directory pointer
 
@@ -63,35 +63,25 @@ void get_folder_contents(const char *folder_name, struct slisthead *dir_list,
             !strncmp(dir_entry->d_name, "..", 2))
             continue;
 
-        struct entry *node = malloc(sizeof(struct entry)); // create new node
-        node->data = malloc(BUFSIZ * sizeof(char));
-        memset(node->data, 0, BUFSIZ); // initialize to 0
+        size_t entry_size = strlen(dir_entry->d_name);
 
-        // put current file entry to node
-        strncat(node->data, dir_entry->d_name, strlen(dir_entry->d_name));
+        // check folder
+        char filepath[BUFSIZ];
+		memset(filepath, 0, BUFSIZ);
+        strncpy(filepath, folder_name, strlen(folder_name));
+        strncat(filepath, dir_entry->d_name, entry_size);
 
-        // construct filepath
-        char path[BUFSIZ];
-        sprintf(path, "%s%s", folder_name, dir_entry->d_name);
-
-        // insert current node to list
-        if (is_dir(path)) {
-            strncat(node->data, "/", 1);
-            SLIST_INSERT_HEAD(dir_list, node, entries);
-        } else
-            SLIST_INSERT_HEAD(file_list, node, entries);
+        if (is_dir(filepath)) {
+			memset(filepath, 0, BUFSIZ);
+			strncpy(filepath, dir_entry->d_name, entry_size);
+			strncat(filepath, "/", 1);
+        	send_list(filepath, strlen(filepath), sock);
+        } else {
+    		send_list(dir_entry->d_name, entry_size, sock);
+        }
     }
+
     closedir(dirp);
-}
-
-void send_list(struct slisthead *list, int sock) {
-    struct entry *np;
-    SLIST_FOREACH(np, list, entries) {
-        char html_list[100 + (2 * strlen(np->data))]; // 100 for html tags
-        sprintf(html_list, "<li><a href=\"%s\">%s</a></li>", np->data,
-                np->data);
-        send(sock, html_list, strlen(html_list), 0); // send list to client
-    }
 }
 
 void send_folder_content(char *folder_name, int client_fd) {
@@ -103,20 +93,9 @@ void send_folder_content(char *folder_name, int client_fd) {
     // send html header to client
     send(client_fd, header, strlen(header), 0);
 
-    struct slisthead dir_list, file_list; // linked lists
-    SLIST_INIT(&dir_list);                // initialize head node
-    SLIST_INIT(&file_list);               // initialize head node
-
-    // load all the folder contents
-    get_folder_contents(folder_name, &dir_list, &file_list);
-    // serve it
-    send_list(&dir_list, client_fd);
-    send_list(&file_list, client_fd);
+    // serve all the folder contents
+    serve_folder_contents(folder_name, client_fd);
 
     // cleanup
-    SLIST_INIT(&dir_list);
-    SLIST_INIT(&file_list);
     free(header);
-
-    return;
 }
