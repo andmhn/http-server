@@ -21,40 +21,35 @@ char *make_header(const char *folder) {
         "dark){body{color:#c9d1d9;background:#0d1117}a:link{color:#58a6ff}a:"
         "visited{color:#8e96f0}}";
 
-    char *format = "<!DOCTYPE html>\
-<head>\
-	<title>Listing files in: %s</title>\
-	<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\
-	<style>%s</style>\
-</head>\
-<h1>Listing Files in %s</h1>\
-<h2><a href=\"..\" style = \"text-decoration: none\">..</a></h2>\
-\
-";
+    char *format =
+        "<!DOCTYPE html>"
+        "<head>"
+        "<title>Listing files in: %s</title>"
+        "<meta name=\"viewport\" content=\"width=device-width, "
+        "initial-scale=1\">"
+        "<style>%s</style>"
+        "</head>"
+        "<h1>Listing Files in %s</h1>"
+        "<h2><a href=\"..\" style = \"text-decoration: none\">..</a></h2>";
 
     sprintf(header, format, folder, css, folder);
 
     return header;
 }
 
-// create lists out of name and sends it
+// create lists out of name and sends it to socket
 void send_list(char *content, size_t size, int sock) {
-        char html_list[100 + (2 * size)]; // 100 for html tags
+    char html_list[100 + (2 * size)]; // 100 for html tags
 
-		sprintf(html_list, "<li><a href=\"%s\">%s</a></li>", content, content);
+    sprintf(html_list, "<li><a href=\"%s\">%s</a></li>", content, content);
 
- 		send(sock, html_list, strlen(html_list), 0); // send list to client
+    send(sock, html_list, strlen(html_list), 0); // send list to client
 }
 
 // serves folder contents as lists in html
-void serve_folder_contents(const char *folder_name, int sock) {
+static void serve_folder_contents(const char *folder_name, int sock) {
     struct dirent *dir_entry;
     DIR *dirp = opendir(folder_name); // directory pointer
-
-    if (dirp == NULL) {
-        perror("opendir");
-        return;
-    }
 
     // loop untill end of entry
     while ((dir_entry = readdir(dirp))) {
@@ -66,21 +61,27 @@ void serve_folder_contents(const char *folder_name, int sock) {
         size_t entry_size = strlen(dir_entry->d_name);
 
         // check folder
-        char filepath[BUFSIZ];
-		memset(filepath, 0, BUFSIZ);
+        char filepath[BUFSIZ] = {0};
         strncpy(filepath, folder_name, strlen(folder_name));
         strncat(filepath, dir_entry->d_name, entry_size);
 
         if (is_dir(filepath)) {
-			memset(filepath, 0, BUFSIZ);
-			strncpy(filepath, dir_entry->d_name, entry_size);
-			strncat(filepath, "/", 1);
-        	send_list(filepath, strlen(filepath), sock);
-        } else {
-    		send_list(dir_entry->d_name, entry_size, sock);
+            memset(filepath, 0, BUFSIZ); // it will contain folder basename
+            strncpy(filepath, dir_entry->d_name, entry_size);
+            strncat(filepath, "/", 1);
+            send_list(filepath, entry_size + 1, sock);
         }
     }
+    closedir(dirp);
+    dirp = opendir(folder_name); // redo it for files
+    while ((dir_entry = readdir(dirp))) {
+        char filepath[BUFSIZ] = {0};
+        strncpy(filepath, folder_name, strlen(folder_name));
+        strncat(filepath, dir_entry->d_name, strlen(dir_entry->d_name));
 
+        if (!is_dir(filepath))
+            send_list(dir_entry->d_name, strlen(dir_entry->d_name), sock);
+    }
     closedir(dirp);
 }
 
