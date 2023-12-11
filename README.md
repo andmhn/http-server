@@ -15,7 +15,7 @@ the binaries are compiled in ``build`` folder
 
 Run the server with
 ```
-bin/http-server <site's folder path>
+./bin/http-server <site's folder path>
 ```
 
 visit this url in web browser to see the site's homepage 
