@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/queue.h>
 #include <sys/socket.h>
 
 // puts folder name to title
@@ -67,7 +66,7 @@ static void serve_folder_contents(const char *folder_name, int sock) {
         if (is_dir(filepath)) {
             memset(filepath, 0, BUFSIZ); // it will contain folder basename
             strncpy(filepath, dir_entry->d_name, entry_size);
-            strncat(filepath, "/", 1);
+            strcat(filepath, "/");
             send_list(filepath, entry_size + 1, sock);
         }
     }
@@ -86,7 +85,7 @@ static void serve_folder_contents(const char *folder_name, int sock) {
 
 void send_folder_content(char *folder_name, int client_fd) {
     if (folder_name[strlen(folder_name) - 1] != '/') {
-        strncat(folder_name, "/", 1);
+        strcat(folder_name, "/");
     }
 
     char *header = make_header(folder_name);
