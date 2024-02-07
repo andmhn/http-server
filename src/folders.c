@@ -25,12 +25,11 @@ char *make_header(const char *folder) {
         "<!DOCTYPE html>"
         "<head>"
         "<title>Listing files in: %s</title>"
-        "<meta name=\"viewport\" content=\"width=device-width, "
-        "initial-scale=1\">"
+        "<meta name=\"viewport\"content=\"width=device-width,initial-scale=1\">"
         "<style>%s</style>"
         "</head>"
         "<h1>Listing Files in %s</h1>"
-        "<h2><a href=\"..\" style = \"text-decoration: none\">..</a></h2>";
+        "<h1><a href=\"..\" style = \"text-decoration: none\">..</a></h1>";
 
     sprintf(header, format, folder, css, folder);
 

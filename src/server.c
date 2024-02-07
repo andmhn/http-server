@@ -13,6 +13,8 @@
 #include <string.h>
 #include <unistd.h>
 
+extern char* PORT;
+
 void send_folder_content(const char *folder_name, int client_fd);
 
 // get sockaddr, IPv4 or IPv6:

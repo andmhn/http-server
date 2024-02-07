@@ -1,8 +1,9 @@
 # tool macros
-CC := clang
+CC := gcc
 CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wconversion -Wfloat-equal  -Wundef  -Wshadow  -Wpointer-arith -Wstrict-overflow=5 -Wunreachable-code # -fsanitize=address -fno-omit-frame-pointer
 DBGFLAGS := -g
 COBJFLAGS := $(CFLAGS) -c
+PREFIX := ~/.local
 
 # path macros
 BIN_PATH := bin
@@ -100,3 +101,14 @@ test: $(TARGET_TEST) run-test
 run-test:
 	./$(TARGET_TEST) --verbose
 
+install:$(TARGET)
+	cp $(TARGET) $(PREFIX)/bin
+
+uninstall:
+	rm $(PREFIX)/bin/$(TARGET_NAME)
+
+ctags:
+	@echo generating ctags
+	@$(CC) -M $(CFLAGS) $(INCLUDE) $(SRC) | sed -e 's/[\\ ]/\n/g' | \
+		sed -e '/^$$/d' -e '/\.o:[ \t]*$$/d' | \
+		ctags -L - --c-kinds=+p --fields=+iaSl --extras=+q --langmap=c:.c.h
