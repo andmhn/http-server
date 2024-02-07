@@ -11,7 +11,7 @@
 
 int init(void);
 
-char *SERVING_DIR;
+char SERVING_DIR[BUFSIZ];
 
 void sigintHandler() { exit(0); }
 
@@ -34,19 +34,16 @@ void help_exit(int status)
 
 int main(int argc, char *argv[]) 
 {	
-	SERVING_DIR = getenv("SERVING_DIR");
+	char* dir = NULL;
 
 	// parse the command line arguments
-	if (argc < 2)
-		help_exit(1);
-
 	int c;
 	while((c = getopt(argc, argv, "d:p:h")) != -1)
 	{
 		switch (c)
 		{
 			case 'd':
-				SERVING_DIR = optarg;
+				dir = optarg;
 				break;
 			case 'p':
 				PORT = optarg;
@@ -59,22 +56,27 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if(SERVING_DIR == NULL)
+	if(dir == NULL)
 	{
 		// set dir from non option arg
-		SERVING_DIR = argv[optind];
+		dir = argv[optind];
 		optind++;
 	}
 
 	// if we still have args
 	if(optind < argc)
 		help_exit(1);
-	
-	if(SERVING_DIR == NULL)
+
+	if(dir == NULL)
+		dir = getenv("SERVING_DIR");
+
+	if(dir == NULL)
 	{
 		fprintf(stderr, "[ERROR]: SERVING_DIR not known\n\n");
 		help_exit(1);
 	}
+	
+	strcpy(SERVING_DIR, dir);
 
 	// start serving now
     if (is_dir(SERVING_DIR)) {
