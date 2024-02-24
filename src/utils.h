@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #define FILE_OK 0
 #define FILE_NOT_EXIST 1
@@ -13,3 +14,16 @@ bool ends_with(const char *str, const char *end_str);
 bool has_permission(const char *filename);
 bool str_starts_with(const char *str, const char *word);
 int verify_filepath(const char *file_path);
+
+
+// Logger
+//=======
+
+// set log_file filepr
+void log_init(FILE * log_file);
+
+// output to log_file with [MSG]:
+void log_msg(char* msg);
+
+// output to log_file with [ERR]:
+void log_perr(char* err);
