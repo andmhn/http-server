@@ -15,7 +15,7 @@ char SERVING_DIR[BUFSIZ];
 
 void sigintHandler() { exit(0); }
 
-char* PORT = "8080";  // the port users will be connecting to
+char *PORT = "8080";  // the port users will be connecting to
 
 
 void help_exit(int status)
@@ -92,6 +92,6 @@ int main(int argc, char *argv[])
     }
     chdir(SERVING_DIR);
 
-    signal(SIGINT, sigintHandler);
+    signal(SIGINT, (__sighandler_t) sigintHandler);
     init();
 }

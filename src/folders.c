@@ -8,9 +8,9 @@
 // puts folder name to title
 // and returns html header
 char *make_header(const char *folder) {
-    char *header = malloc(BUFSIZ);
+    char *header = (char*) malloc(BUFSIZ);
 
-    char *css =
+    char css[] =
         "body{max-width:650px;margin:40px auto;padding:0 10px;font:18px/1.5 "
         "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica "
         "Neue\", Arial, \"Noto Sans\", sans-serif, \"Apple Color Emoji\", "
@@ -20,7 +20,7 @@ char *make_header(const char *folder) {
         "dark){body{color:#c9d1d9;background:#0d1117}a:link{color:#58a6ff}a:"
         "visited{color:#8e96f0}}";
 
-    char *format =
+    char format[] =
         "<!DOCTYPE html>"
         "<head>"
         "<title>Listing files in: %s</title>"

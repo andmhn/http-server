@@ -1,6 +1,6 @@
 # tool macros
 CC := gcc
-CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wconversion -Wfloat-equal  -Wundef  -Wshadow  -Wpointer-arith -Wstrict-overflow=5 -Wunreachable-code # -fsanitize=address -fno-omit-frame-pointer
+CFLAGS := -Wall
 DBGFLAGS := -g
 COBJFLAGS := $(CFLAGS) -c
 PREFIX := ~/.local

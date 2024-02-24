@@ -86,7 +86,7 @@ int parse_req(const char *req, HttpRequest *request) {
 
 // parse Percent-encoding charcters in url
 char *parse_encoded_url(const char *url) {
-    char *parsed_url = malloc(sizeof(char) * BUFSIZ);
+    char *parsed_url = (char*) malloc(sizeof(char) * BUFSIZ);
     memset(parsed_url, 0, BUFSIZ);
 
     char prev_char = url[0];
