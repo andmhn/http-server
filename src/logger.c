@@ -14,17 +14,19 @@ void log_init(FILE * fp)
 }
 
 // output to log_file 
-void log_msg(char* msg)
+void log_msg(const char* msg)
 {
     if(log_file == NULL)
         log_file = stdout;
-    fprintf(log_file, "[MSG]: %s\n", msg);
+    fprintf(log_file, "%s\n", msg);
+    fflush(log_file);
 }
 
 // strerror to log_file
-void log_perr(char* err)
+void log_perr(const char* err)
 {
     if(log_file == NULL)
-        log_file = stdout;
+        log_file = stderr;
     fprintf(log_file, "[ERR]: %s: %s\n", err, strerror(errno));
+    fflush(log_file);
 }

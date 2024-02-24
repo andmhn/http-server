@@ -1,3 +1,4 @@
+#pragma once
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -23,7 +24,7 @@ int verify_filepath(const char *file_path);
 void log_init(FILE * log_file);
 
 // output to log_file with [MSG]:
-void log_msg(char* msg);
+void log_msg(const char* msg);
 
 // output to log_file with [ERR]:
-void log_perr(char* err);
+void log_perr(const char* err);

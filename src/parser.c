@@ -1,4 +1,6 @@
 #include "parser.h"
+#include "utils.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -75,12 +77,12 @@ int parse_req(const char *req, HttpRequest *request) {
             break;
     }
     if (request->method == -1) {
-        fputs("Invalid Request\n", stderr);
+        log_msg("[ERR]: Got Invalid Request");
         return -1;
     }
     fill_req_content(curr_line, request);
 
-    printf("%s\n", curr_line);
+    log_msg(curr_line);
     return 0;
 }
 

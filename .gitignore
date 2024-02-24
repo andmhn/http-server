@@ -6,3 +6,4 @@ compile_commands.json
 guide.txt
 .gdb_history
 tags
+server.log

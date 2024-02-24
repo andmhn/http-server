@@ -36,7 +36,9 @@ int init(void) {
     hints.ai_flags = AI_PASSIVE; // use my IP
 
     if ((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+        char msg[BUFSIZ] = {0};
+        sprintf(msg, "getaddrinfo: %s\n", gai_strerror(rv));
+        log_msg(msg);
         return 1;
     }
 
@@ -44,17 +46,17 @@ int init(void) {
     for (p = servinfo; p != NULL; p = p->ai_next) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) ==
             -1) {
-            perror("server: socket");
+            log_perr("server: socket");
             continue;
         }
         if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) ==
             -1) {
-            perror("setsockopt");
+            log_perr("setsockopt");
             exit(1);
         }
         if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
             close(sockfd);
-            perror("server: bind");
+            log_perr("server: bind");
             continue;
         }
 
@@ -64,12 +66,12 @@ int init(void) {
     freeaddrinfo(servinfo); // all done with this structure
 
     if (p == NULL) {
-        fprintf(stderr, "server: failed to bind\n");
+        log_perr("server: failed to bind\n");
         exit(1);
     }
 
     if (listen(sockfd, BACKLOG) == -1) {
-        perror("listen");
+        log_perr("listen");
         exit(1);
     }
 
@@ -85,22 +87,24 @@ void accept_req(int sockfd) {
 
     while (1) { // main accept() loop
         char request_str[BUFSIZ];
-        printf("server: waiting for connections...\n");
+        log_msg("\nserver: waiting for connections...");
         sin_size = sizeof client_addr;
         client_fd = accept(sockfd, (struct sockaddr *)&client_addr, &sin_size);
         if (client_fd == -1) {
-            perror("accept");
+            log_perr("accept");
             continue;
         }
 
         // getting ip address of client
         inet_ntop(client_addr.ss_family,
                   get_in_addr((struct sockaddr *)&client_addr), s, sizeof s);
-        printf("server: got connection from %s\n", s);
+        char msg[BUFSIZ] = {0};
+        sprintf(msg, "server: got connection from %s", s);
+        log_msg(msg);
 
         // recieving
         if (recv(client_fd, request_str, BUFSIZ, 0) == -1) {
-            perror("recv");
+            log_perr("recv");
             close(client_fd);
             break;
         }
@@ -116,7 +120,7 @@ void send_file(int sock_fd, const char *f_name) {
     FILE *fp1 = fopen(f_name, "rb");
 
     if (fp1 == NULL) {
-        perror(f_name);
+        log_perr(f_name);
         exit(1);
     }
 
@@ -133,7 +137,7 @@ void send_file(int sock_fd, const char *f_name) {
 
         // send only read bytes
         if (send(sock_fd, buffer, bytesread, 0) == -1) {
-            perror("send");
+            log_perr("send");
             break;
         }
     }
@@ -166,14 +170,14 @@ void process_req(const char *request_str, int client_fd) {
     // Parse String
     HttpRequest incoming_request;
     if (parse_req(request_str, &incoming_request) == -1) {
-        fprintf(stderr, "Got Invalid request\n");
+        log_msg("[ERR]: Got Invalid request");
         return;
     }
 
     // send head
     if (incoming_request.method == HEAD) {
         if (send(client_fd, header_ok, strlen(header_ok), 0) == -1)
-            perror("send");
+            log_perr("send");
 
         return;
     }
@@ -181,7 +185,7 @@ void process_req(const char *request_str, int client_fd) {
     // all other requests
     if (incoming_request.method > 1) {
         if (send(client_fd, header_501, strlen(header_501), 0) == -1)
-            perror("send");
+            log_perr("send");
         return;
     }
 
@@ -191,16 +195,16 @@ void process_req(const char *request_str, int client_fd) {
 
     // check if file exist
     if (verify_filepath(parsed_url) == -1) {
-        perror(parsed_url);
+        log_perr(parsed_url);
         if (send(client_fd, header_404, strlen(header_404), 0) == -1)
-            perror("send");
+            log_perr("send");
         goto exit;
     }
 
     // check permission to view content
     if (verify_filepath(parsed_url) && !has_permission(parsed_url)) {
         if (send(client_fd, header_403, strlen(header_403), 0) == -1)
-            perror("send");
+            log_perr("send");
         goto exit;
     }
 
@@ -208,19 +212,19 @@ void process_req(const char *request_str, int client_fd) {
     if (str_starts_with(incoming_request.value, "./") ||
         str_starts_with(incoming_request.value, "../")) {
         if (send(client_fd, header_400, strlen(header_400), 0) == -1)
-            perror("send");
+            log_perr("send");
         goto exit;
     }
 
     // sending 200 OK first
     if (send(client_fd, header_ok, strlen(header_ok), 0) == -1)
-        perror("send");
+        log_perr("send");
 
     // serving content
     handle_request_value(client_fd, parsed_url);
 
 exit:
-    printf("\n");
+//    printf("\n");
     fflush(stdout);
     free(parsed_url);
     free(incoming_request.value);

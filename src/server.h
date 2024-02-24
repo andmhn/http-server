@@ -1,3 +1,4 @@
+#pragma once
 #include <sys/socket.h>
 
 #define BACKLOG 10        // how many pending connections queue will hold
