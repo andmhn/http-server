@@ -1,0 +1,101 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0309
+header_name {.h}
+code_name {.cpp}
+decl {\#include "functions.h"} {private local
+}
+
+decl {\#include <FL/Fl_File_Chooser.H>} {public global
+}
+
+class Window_Main {open
+} {
+  decl {Fl_File_Icon *icon;} {
+    comment {New file icon} private local
+  }
+  Function {Window_Main()} {open
+  } {
+    Fl_Window m_window {
+      label {http-server} open
+      xywh {472 162 500 400} type Double resizable visible
+    } {
+      Fl_Group group {open
+        xywh {15 15 470 126}
+      } {
+        Fl_File_Input folder_input {
+          label {folder:}
+          tooltip {Enter the folder to serve} xywh {69 15 324 36}
+        }
+        Fl_Input port_input {
+          label {port:}
+          tooltip {Enter Port Number (Optional)} xywh {69 61 100 32}
+        }
+        Fl_Button start_btn {
+          label Start
+          callback {start_server()}
+          tooltip {Start the server} xywh {69 101 64 22} color 78
+        }
+        Fl_Button clear_btn {
+          label Clear
+          callback {clear_output();}
+          tooltip {Clear the output} xywh {411 101 64 22}
+        }
+        Fl_Button chooser {
+          label {..}
+          callback {folder_chooser();}
+          tooltip {Open file chooser} xywh {411 19 45 32} hotspot
+        }
+        Fl_Button stop_btn {
+          label Stop
+          callback {stop_server()}
+          tooltip {Stop the server} xywh {69 101 64 22} color 89 labelcolor 55 hide
+        }
+      }
+      Fl_Text_Display output {
+        xywh {15 149 470 236} resizable
+      }
+    }
+    code {// Make file chooser icon
+{
+  Fl::scheme(NULL);
+  Fl_File_Icon::load_system_icons();
+  if ( (icon = Fl_File_Icon::find(".", Fl_File_Icon::DIRECTORY)) ) {
+  // Icon found; assign it..
+    chooser->labelcolor(FL_YELLOW);
+    icon->label(chooser);
+  }
+}} {}
+  }
+  Function {show()} {open
+  } {
+    code {m_window->show();} {}
+  }
+  Function {folder_chooser()} {
+    comment {open folder chooser} open
+  } {
+    code {Fl_File_Chooser fc(".", "*", Fl_File_Chooser::SINGLE,
+ 	 		      "Select Folder");
+fc.type(Fl_File_Chooser::DIRECTORY);
+
+fc.show();
+
+while (fc.visible()) 
+  Fl::wait();
+
+// file gets chosen
+if(fc.value())
+  folder_input->value(fc.value());} {selected
+    }
+  }
+  Function {~Window_Main()} {open
+  } {
+    code {delete folder_input;
+delete port_input;
+delete start_btn;
+delete stop_btn;
+delete clear_btn;
+delete chooser;
+delete output;
+delete icon;} {}
+  }
+}

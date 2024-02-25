@@ -13,7 +13,8 @@
 #include <string.h>
 #include <unistd.h>
 
-extern char* PORT;
+char PORT[] = "8080";  // the port users will be connecting to
+bool IS_RUNNING = 1;
 
 void send_folder_content(const char *folder_name, int client_fd);
 
@@ -76,6 +77,7 @@ int init(void) {
     }
 
     accept_req(sockfd);
+    close(sockfd);
     return 0;
 }
 
@@ -85,7 +87,7 @@ void accept_req(int sockfd) {
     int client_fd;
     char s[INET6_ADDRSTRLEN];
 
-    while (1) { // main accept() loop
+    while (1 && IS_RUNNING) { // main accept() loop
         char request_str[BUFSIZ];
         log_msg("\nserver: waiting for connections...");
         sin_size = sizeof client_addr;

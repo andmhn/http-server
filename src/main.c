@@ -15,8 +15,7 @@ char SERVING_DIR[BUFSIZ/2];
 
 void sigintHandler() { exit(0); }
 
-char *PORT = "8080";  // the port users will be connecting to
-
+extern char PORT[];
 
 void help_exit(int status)
 {
@@ -50,7 +49,7 @@ int main(int argc, char *argv[])
                 dir = optarg;
                 break;
             case 'p':
-                PORT = optarg;
+                strncpy(PORT, optarg, 4);
                 break;
             case 'h':
                 help_exit(0);
