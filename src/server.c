@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
+#include <sys/wait.h>
 
 char PORT[] = "8080";  // the port users will be connecting to
 bool IS_RUNNING = 1;
@@ -23,6 +25,16 @@ char header_400[] = "HTTP/1.0 400 Bad Request\r\n\n";
 char header_501[] = "501 Not Implemented\r\n\n";
 
 void send_folder_content(const char *folder_name, int client_fd);
+
+void sigchld_handler(int s)
+{
+    // waitpid() might overwrite errno, so we save and restore it:
+    int saved_errno = errno;
+
+    while(waitpid(-1, NULL, WNOHANG) > 0);
+
+    errno = saved_errno;
+}
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa) {
@@ -36,6 +48,7 @@ void *get_in_addr(struct sockaddr *sa) {
 int init(void) {
     int sockfd, yes = 1, rv;
     struct addrinfo hints, *servinfo, *p;
+    struct sigaction sa;
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
@@ -82,6 +95,14 @@ int init(void) {
         exit(1);
     }
 
+    sa.sa_handler = sigchld_handler; // reap all dead processes
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART;
+    if (sigaction(SIGCHLD, &sa, NULL) == -1) {
+        perror("sigaction");
+        exit(1);
+    }
+
     accept_req(sockfd);
     close(sockfd);
     return 0;
@@ -111,13 +132,16 @@ void accept_req(int sockfd) {
         log_msg(msg);
 
         // recieving
-        if (recv(client_fd, request_str, BUFSIZ, 0) == -1) {
-            log_perr("recv");
-            close(client_fd);
-            break;
+        if (!fork()) { // this is the child process
+            close(sockfd); // child doesn't need the listener
+            if (recv(client_fd, request_str, BUFSIZ, 0) == -1) {
+                log_perr("recv");
+                close(client_fd);
+                break;
+            }
+            process_req(request_str, client_fd);
+            exit(0);
         }
-
-        process_req(request_str, client_fd);
 
         close(client_fd);
     }
