@@ -20,9 +20,6 @@ int verify_filepath(const char *file_path);
 // Logger
 //=======
 
-// set log_file filepr
-void log_init(FILE * log_file);
-
 // output to log_file with [MSG]:
 void log_msg(const char* msg);
 

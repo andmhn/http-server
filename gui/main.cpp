@@ -25,11 +25,6 @@ extern "C"
     bool has_permission(const char *filename);
     bool is_dir(const char *path);
 
-    void log_init(FILE * file)
-    {
-        // do nothing
-    }
-
     // output to buffer 
     void log_msg(const char* msg)
     {
