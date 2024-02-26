@@ -13,7 +13,10 @@ int init(void);
 
 char SERVING_DIR[BUFSIZ/2];
 
-void sigintHandler() { exit(0); }
+void sigintHandler() {
+    log_msg("\nExiting...");
+    exit(0); 
+}
 
 extern char PORT[];
 

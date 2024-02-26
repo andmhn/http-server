@@ -16,6 +16,12 @@
 char PORT[] = "8080";  // the port users will be connecting to
 bool IS_RUNNING = 1;
 
+char header_ok[]  = "HTTP/1.0 200 OK\r\n\n";
+char header_404[] = "HTTP/1.0 404 Not Found\r\n\n";
+char header_403[] = "HTTP/1.0 403 Forbidden\r\n\n";
+char header_400[] = "HTTP/1.0 400 Bad Request\r\n\n";
+char header_501[] = "501 Not Implemented\r\n\n";
+
 void send_folder_content(const char *folder_name, int client_fd);
 
 // get sockaddr, IPv4 or IPv6:

@@ -102,10 +102,10 @@ char *parse_encoded_url(const char *url) {
             j--;
             continue;
         }
-        if (url[i] == '+') { // handle '+' first
-            parsed_url[j] = ' ';
-            continue;
-        }
+        // if (url[i] == '+') { // handle '+' first
+        //     parsed_url[j] = ' ';
+        //     continue;
+        // }
         parsed_url[j] = url[i];
 
         if (prev_char == '%') {

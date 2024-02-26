@@ -5,11 +5,12 @@
 #define BUFFERSIZE 0x8000 // 32k buffer (adapt at will)
 
 extern char SERVING_DIR[];
-char header_ok[]  = "HTTP/1.0 200 OK\r\n\n";
-char header_404[] = "HTTP/1.0 404 Not Found\r\n\n";
-char header_403[] = "HTTP/1.0 403 Forbidden\r\n\n";
-char header_400[] = "HTTP/1.0 400 Bad Request\r\n\n";
-char header_501[] = "501 Not Implemented\r\n\n";
+
+extern char header_ok[];
+extern char header_404[];
+extern char header_403[];
+extern char header_400[];
+extern char header_501[];
 
 // Function declarations
 int init(void);
