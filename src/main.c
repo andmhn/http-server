@@ -1,5 +1,4 @@
 #include "utils.h"
-#include <bits/getopt_core.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -135,9 +134,7 @@ int main(int argc, char *argv[])
     }
     chdir(SERVING_DIR);
 
-#ifndef CYGWIN
     signal(SIGINT, sigintHandler);
-#endif
 
     init();
 }
