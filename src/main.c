@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <bits/getopt_core.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -7,20 +8,23 @@
 #include <unistd.h>
 #include <ctype.h>
 
-// <dir> -p port
-
 int init(void);
 
-char SERVING_DIR[BUFSIZ/2];
+extern char PORT[];
+char SERVING_DIR[BUFSIZ] = {0};
 
 void sigintHandler() {
-    log_msg("\nExiting...");
-    exit(0); 
+    printf("Do You Want to Close Server?? (y/n):");
+    if(getchar() == 'y')
+    {
+        log_msg("\nExiting...");
+        exit(0);
+    }
+    else
+        log_msg("Continuing...");
 }
 
-extern char PORT[];
-
-void help_exit(int status)
+static void help_exit(int status)
 {
     fprintf(stderr,
             "Usage: http-server [OPTIONS] [folder to serve]\n"
@@ -34,15 +38,34 @@ void help_exit(int status)
     exit(status);
 }
 
-int main(int argc, char *argv[]) 
+static void ask_input()
 {
-    // set server log output file
-    // FILE * log_file = fopen("server.log", "a");
-    // log_init(log_file);
+    puts("You didn't provide arguments");
+    puts("Please do now!");
+    printf("Serving Folder (empty for current dir): ");
 
+    uint i = 0, c;
+    for(;i < sizeof(SERVING_DIR) && ((c = getchar()) != '\n'); i++)
+    {
+        SERVING_DIR[i] = c;
+    }
+    if(i == 0)
+        SERVING_DIR[0] = '.';
+
+    printf("Serving Port (empty for 8080): ");
+
+    for(uint i = 0, c;i < 4 && ((c = getchar()) != '\n'); i++)
+    {
+        if(i == 0)  // now we know user has given inputs
+            memset(PORT, 0, 4);
+        PORT[i] = c;
+    }
+}
+
+// parse the command line arguments
+static void parse_arguments(int argc, char*argv[])
+{
     char* dir = NULL;
-
-    // parse the command line arguments
     int c;
     while((c = getopt(argc, argv, "d:p:h")) != -1)
     {
@@ -83,6 +106,14 @@ int main(int argc, char *argv[])
     }
 
     strcpy(SERVING_DIR, dir);
+}
+
+int main(int argc, char *argv[]) 
+{
+    if(argc == 1)
+        ask_input();
+    else
+        parse_arguments(argc, argv);
 
     // start serving now
     if (is_dir(SERVING_DIR)) {
@@ -91,12 +122,12 @@ int main(int argc, char *argv[])
             exit(1);
         }
 
-        char msg[BUFSIZ] = {0};
-        sprintf(msg, "Serving in: %s", SERVING_DIR);
+        char msg[BUFSIZ + 100] = {0};
+        sprintf(msg, "Starting Server in: %s", SERVING_DIR);
         log_msg(msg);
 
         memset(msg, 0, BUFSIZ);
-        sprintf(msg, "Local URL http://127.0.0.1:%s", PORT);
+        sprintf(msg, "Local URL http://localhost:%s", PORT);
         log_msg(msg);
     } else {
         log_perr(SERVING_DIR);
@@ -104,7 +135,9 @@ int main(int argc, char *argv[])
     }
     chdir(SERVING_DIR);
 
-    signal(SIGINT, (__sighandler_t) sigintHandler);
+#ifndef CYGWIN
+    signal(SIGINT, sigintHandler);
+#endif
+
     init();
-    // fclose(log_file);
 }

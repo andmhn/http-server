@@ -257,7 +257,7 @@ void process_req(const char *request_str, int client_fd) {
 
 exit:
 //    printf("\n");
-    fflush(stdout);
+//    fflush(stdout);
     free(parsed_url);
     free(incoming_request.value);
 }
