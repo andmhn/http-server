@@ -17,6 +17,7 @@
 
 char PORT[] = "8080";  // the port users will be connecting to
 bool IS_RUNNING = 1;
+int sockfd;
 
 char header_ok[]  = "HTTP/1.0 200 OK\r\n\n";
 char header_404[] = "HTTP/1.0 404 Not Found\r\n\n";
@@ -46,7 +47,7 @@ void *get_in_addr(struct sockaddr *sa) {
 }
 
 int init(void) {
-    int sockfd, yes = 1, rv;
+    int yes = 1, rv;
     struct addrinfo hints, *servinfo, *p;
     struct sigaction sa;
 

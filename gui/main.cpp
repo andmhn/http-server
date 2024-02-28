@@ -19,6 +19,7 @@ std::thread *server_thread;
 extern "C"
 {
     // definitions from server
+    extern int sockfd;
     extern bool IS_RUNNING;
     extern char PORT[];
     int init(void);
@@ -95,12 +96,8 @@ void stop_server()
 {
     if(!IS_RUNNING) return;
     IS_RUNNING = 0;
-    server_thread->detach();
-
-    // clean the listening socket
-    char cmd[BUFSIZ/4];
-    sprintf(cmd, "curl -s --head http://127.0.0.1:%s/ > /dev/null", PORT);
-    system(cmd);
+    close(sockfd);
+    pthread_cancel(server_thread->native_handle());
 
     win.stop_btn->hide();
     win.start_btn->show();
