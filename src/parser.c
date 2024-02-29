@@ -1,6 +1,7 @@
 #include "parser.h"
 #include "utils.h"
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -86,6 +87,14 @@ int parse_req(const char *req, HttpRequest *request) {
     return 0;
 }
 
+#define MASK_UCHAR   ((unsigned char)~0)
+
+// unsigned long to unsigned char
+unsigned char ultouc(unsigned long ulnum)
+{
+  return (unsigned char)(ulnum & (unsigned long) MASK_UCHAR);
+}
+
 // parse Percent-encoding charcters in url
 char *parse_encoded_url(const char *url) {
     char *parsed_url = (char*) malloc(sizeof(char) * BUFSIZ);
@@ -102,59 +111,19 @@ char *parse_encoded_url(const char *url) {
             j--;
             continue;
         }
-        // if (url[i] == '+') { // handle '+' first
-        //     parsed_url[j] = ' ';
-        //     continue;
-        // }
         parsed_url[j] = url[i];
 
-        if (prev_char == '%') {
+        if (prev_char == '%' && isxdigit(url[i]) && isxdigit(url[i + 1])) {
             // get encoded characters
             encoding[0] = url[i];
             encoding[1] = url[++i];
             encoding[2] = '\0';
 
-            // assign encoding to appropriate character
-            if (!strncmp(encoding, "20", 2))
-                parsed_url[j] = ' ';
-            else if (!strncmp(encoding, "26", 2))
-                parsed_url[j] = '&';
-            else if (!strncmp(encoding, "3A", 2))
-                parsed_url[j] = ':';
-            else if (!strncmp(encoding, "2F", 2))
-                parsed_url[j] = '/';
-            else if (!strncmp(encoding, "3F", 2))
-                parsed_url[j] = '?';
-            else if (!strncmp(encoding, "23", 2))
-                parsed_url[j] = '#';
-            else if (!strncmp(encoding, "5B", 2))
-                parsed_url[j] = '[';
-            else if (!strncmp(encoding, "5D", 2))
-                parsed_url[j] = ']';
-            else if (!strncmp(encoding, "40", 2))
-                parsed_url[j] = '@';
-            else if (!strncmp(encoding, "21", 2))
-                parsed_url[j] = '!';
-            else if (!strncmp(encoding, "24", 2))
-                parsed_url[j] = '$';
-            else if (!strncmp(encoding, "27", 2))
-                parsed_url[j] = '\'';
-            else if (!strncmp(encoding, "28", 2))
-                parsed_url[j] = '(';
-            else if (!strncmp(encoding, "29", 2))
-                parsed_url[j] = ')';
-            else if (!strncmp(encoding, "2A", 2))
-                parsed_url[j] = '*';
-            else if (!strncmp(encoding, "2B", 2))
-                parsed_url[j] = '+';
-            else if (!strncmp(encoding, "2C", 2))
-                parsed_url[j] = ',';
-            else if (!strncmp(encoding, "3B", 2))
-                parsed_url[j] = ';';
-            else if (!strncmp(encoding, "3D", 2))
-                parsed_url[j] = '=';
-            else if (!strncmp(encoding, "25", 2))
-                parsed_url[j] = '%';
+            // Now convert the encoding hes str to hex value
+            unsigned long hex = strtoul(encoding, NULL, 16);
+
+            // change hex value to char equivalent
+            parsed_url[j] = ultouc(hex);
         }
         prev_char = url[i];
     }

@@ -25,6 +25,7 @@ char *make_header(const char *folder) {
         "<head>"
         "<title>Listing files in: %s</title>"
         "<meta name=\"viewport\"content=\"width=device-width,initial-scale=1\">"
+        "<meta charset=\"UTF-8\">"
         "<style>%s</style>"
         "</head>"
         "<h1>Listing Files in %s</h1>"
