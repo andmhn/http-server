@@ -12,15 +12,14 @@ int init(void);
 extern char PORT[];
 char SERVING_DIR[BUFSIZ] = {0};
 
-void sigintHandler() {
+void sigint_handler() {
     printf("Do You Want to Close Server?? (y/n):");
     if(getchar() == 'y')
     {
         log_msg("\nExiting...");
         exit(0);
     }
-    else
-        log_msg("Continuing...");
+    log_msg("Continuing...");
 }
 
 static void help_exit(int status)
@@ -134,7 +133,7 @@ int main(int argc, char *argv[])
     }
     chdir(SERVING_DIR);
 
-    signal(SIGINT, sigintHandler);
+    signal(SIGINT, sigint_handler);
 
     init();
 }

@@ -1,11 +1,9 @@
 # http-server
-A simple http server to quickly serve the website in port 8080
-
-### WARNING: to be used in local system for security purposes
+A static http server to quickly serve the website in port 8080
 
 # Building
 
-Make sure you are in linux / unix system 
+Make sure you are in linux / unix system (or cygwin in windows)
 
 Run this command to build this project
 ```
@@ -29,6 +27,11 @@ Run the server with
 visit this url in web browser to see the site's homepage 
 ```
 http://localhost:8080/
+```
+
+or specify the port and folder with command line flags
+```
+./bin/http-server -p <port> -d <site path>
 ```
 
 Get more usage of this program
