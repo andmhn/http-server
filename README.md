@@ -15,7 +15,7 @@ the binaries are compiled in ``build`` folder
 compiled program is stored in bin folder
 install it with
 ```
-make install
+sudo make install PREFIX=/usr/local
 ```
 
 # Usage
